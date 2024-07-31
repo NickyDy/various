@@ -51,64 +51,6 @@ space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "",
 }
 #--------------------------------------------------------
 votes %>%
-    filter(vote_date %in% c("Юни_2024", "Април_2023")) %>%
-    pivot_wider(names_from = vote_date, values_from = votes) %>% 
-    mutate(diff = Юни_2024 - Април_2023) %>%
-  filter(Април_2023 < 30 & diff > 150) %>% view
-votes %>%
-  filter(vote_date %in% c("Юни_2024", "Април_2023")) %>%
-  pivot_wider(names_from = vote_date, values_from = votes) %>% 
-  summarise(april_sum = sum(Април_2023, na.rm = T),
-            june_sum = sum(Юни_2024, na.rm = T),
-            diff = june_sum - april_sum, .by = c(oblast, party)) %>%
-  filter(party %in% c("ИТН", "ПП-ДБ", "ГЕРБ-СДС", "ДПС", "ВЪЗРАЖДАНЕ", "БСП")) %>%
-  mutate(col = diff > 0, oblast = fct_rev(oblast),
-         col = as.factor(col),
-         col = fct_recode(col, "Загуба на гласове" = "FALSE",
-                          "Печалба на гласове" = "TRUE"),
-         party = fct_relevel(party, "ГЕРБ-СДС", "ДПС", "ПП-ДБ", "ВЪЗРАЖДАНЕ", "БСП", "ИТН")) %>% 
-  ggplot(aes(diff, oblast, fill = col)) +
-  geom_col() +
-  geom_text(aes(label = space_s(diff)), 
-            position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-  scale_fill_manual(values = c("red", "blue")) +
-  scale_x_continuous(expand = expansion(mult = c(.01, .3))) +
-  theme(text = element_text(size = 16), legend.position = "top", 
-        axis.text.x = element_blank(), 
-        axis.ticks.x = element_blank()) +
-  labs(y = NULL, x = "Брой гласове", fill = "Легенда:",
-       title = "Загуба и печалба на гласове от основните партии на последните избори в сравнение с предпоследните:") +
-  facet_wrap(vars(party), ncol = 6)
-#------------------------------------------------  
-votes %>%
-  mutate(vote_date = fct_relevel(vote_date,
-                                   "Юни_2024",
-                                   "Април_2023",
-                                   "Октомври_2022", 
-                                   "Ноември_2021", 
-                                   "Юли_2021", 
-                                   "Април_2021", 
-                                   "Март_2017")) %>%
-    group_by(vote_date, party) %>%
-    summarise(sum_votes = sum(votes)) %>%
-    pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
-    mutate(diff = Април_2023 - Октомври_2022, party = fct_reorder(party, diff, .na_rm = T),
-           col = diff > 0, col = as.factor(col),
-           col = fct_recode(col, "Загуба на гласове" = "FALSE",
-                                                 "Печалба на гласове" = "TRUE")) %>% 
-    drop_na(diff) %>% 
-    ggplot(aes(diff, party, fill = col)) +
-    geom_col() +
-    geom_text(aes(label = space_s(diff)), 
-              position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
-    scale_fill_manual(values = c("red", "blue")) +
-    scale_x_continuous(expand = expansion(mult = c(.01, .1))) +
-    theme(text = element_text(size = 16), legend.position = "top", 
-          axis.text.x = element_blank(), 
-          axis.ticks.x = element_blank()) +
-    labs(y = NULL, x = "Брой гласове", fill = "Легенда:")
-    
-votes %>%
   #filter(code == "122900055") %>% 
   mutate(vote_date = fct_relevel(vote_date,
                                  "Юни_2024",
@@ -136,7 +78,7 @@ votes %>%
   labs(y = NULL, x = "Брой гласове", title = ,
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК."
        ) +
-  facet_wrap(~ vote_date, ncol = 7)
+  facet_wrap(~ vote_date, nrow = 1)
 
 votes %>%
   #filter(oblast == "Пловдив град") %>% 
@@ -166,9 +108,65 @@ votes %>%
   			axis.ticks.x = element_blank()) +
   labs(x = NULL, y = NULL, title = NULL,
        caption = "Бележка: Оцветени са само партиите и коалициите влизали в Парламента, останалите са в сиво.\nИзточник на данните: ЦИК.") +
-  facet_wrap(~ vote_date, ncol = 7)
-
-# Maps----------------------------------------
+  facet_wrap(~ vote_date, nrow = 1)
+#----------------------------------
+votes %>%
+  filter(vote_date %in% c("Юни_2024", "Април_2023")) %>%
+  pivot_wider(names_from = vote_date, values_from = votes) %>% 
+  mutate(diff = Юни_2024 - Април_2023) %>%
+  filter(Април_2023 < 30 & diff > 150) %>% view
+votes %>%
+  filter(vote_date %in% c("Юни_2024", "Април_2023")) %>%
+  pivot_wider(names_from = vote_date, values_from = votes) %>% 
+  summarise(april_sum = sum(Април_2023, na.rm = T),
+            june_sum = sum(Юни_2024, na.rm = T),
+            diff = june_sum - april_sum, .by = c(oblast, party)) %>%
+  filter(party %in% c("ИТН", "ПП-ДБ", "ГЕРБ-СДС", "ДПС", "ВЪЗРАЖДАНЕ", "БСП")) %>%
+  mutate(col = diff > 0, oblast = fct_rev(oblast),
+         col = as.factor(col),
+         col = fct_recode(col, "Загуба на гласове" = "FALSE",
+                          "Печалба на гласове" = "TRUE"),
+         party = fct_relevel(party, "ГЕРБ-СДС", "ДПС", "ПП-ДБ", "ВЪЗРАЖДАНЕ", "БСП", "ИТН")) %>% 
+  ggplot(aes(diff, oblast, fill = col)) +
+  geom_col() +
+  geom_text(aes(label = space_s(diff)), 
+            position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
+  scale_fill_manual(values = c("red", "blue")) +
+  scale_x_continuous(expand = expansion(mult = c(.01, .3))) +
+  theme(text = element_text(size = 16), legend.position = "top", 
+        axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank()) +
+  labs(y = NULL, x = "Брой гласове", fill = "Легенда:",
+       title = "Загуба и печалба на гласове от основните партии на последните избори в сравнение с предпоследните:") +
+  facet_wrap(vars(party), ncol = 6)
+votes %>%
+  mutate(vote_date = fct_relevel(vote_date,
+                                 "Юни_2024",
+                                 "Април_2023",
+                                 "Октомври_2022", 
+                                 "Ноември_2021", 
+                                 "Юли_2021", 
+                                 "Април_2021", 
+                                 "Март_2017")) %>%
+  group_by(vote_date, party) %>%
+  summarise(sum_votes = sum(votes)) %>%
+  pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
+  mutate(diff = Април_2023 - Октомври_2022, party = fct_reorder(party, diff, .na_rm = T),
+         col = diff > 0, col = as.factor(col),
+         col = fct_recode(col, "Загуба на гласове" = "FALSE",
+                          "Печалба на гласове" = "TRUE")) %>% 
+  drop_na(diff) %>% 
+  ggplot(aes(diff, party, fill = col)) +
+  geom_col() +
+  geom_text(aes(label = space_s(diff)), 
+            position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
+  scale_fill_manual(values = c("red", "blue")) +
+  scale_x_continuous(expand = expansion(mult = c(.01, .1))) +
+  theme(text = element_text(size = 16), legend.position = "top", 
+        axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank()) +
+  labs(y = NULL, x = "Брой гласове", fill = "Легенда:")
+# Maps-------------------------------------------------
 db <- votes %>%
   group_by(vote_date, obshtina, party) %>%
   summarise(sum_party = sum(votes)) %>%
