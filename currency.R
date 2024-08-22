@@ -30,12 +30,12 @@ ckb<-ckb[[1]] %>% select(1,5,6) %>% slice(1, 9) %>%
   rename("cur" = "Валута", "buying" = "Курс купува", "selling" = "Курс продава") %>% 
   mutate(bank = "CKB", date = today(tzone = ""), selling = as.numeric(selling), buying = as.numeric(buying))
 
-bul<-read_html("https://www.unicreditbulbank.bg/bg/kursove-indeksi/valutni-kursove/") %>% 
+mun<-read_html("https://www.municipalbank.bg/?page=currency") %>%
   html_table()
-bul<-bul[[1]] %>% select(1,3,4) %>% slice(3, 2) %>% 
-  rename("cur" = "Валута", "selling" = "Банката продава", "buying" = "Банката купува") %>% 
+mun<-mun[[2]] %>% select(2, 4, 5) %>% slice(1, 2) %>%
+  rename("cur" = "Валута", "selling" = "Курс продава*", "buying" = "Курс купува*") %>%
   mutate(selling = str_replace(selling, ",", "."), buying = str_replace(buying, ",", "."),
-         bank = "BULBANK", date = today(tzone = "")) %>% 
+         bank = "MUNICIPALBANK", date = today(tzone = "")) %>%
   mutate(selling = as.numeric(selling), buying = as.numeric(buying))
 
 # kbc<-read_html("https://www.kbcbank.bg/bg/individualni-klienti/polezni-instrumenti/bankirane/valutni-kursove/") %>% 
@@ -49,20 +49,6 @@ post<-read_html("https://www.postbank.bg/Valutni-Kursove") %>%
 post<-post[[2]] %>% row_to_names(row_number = 1) %>% select(2,6,7) %>% slice(1,2) %>% 
   rename("cur" = "Код", "buying" = "Купува", "selling" = "Продава") %>% 
   mutate(bank = "POST", date = today(tzone = ""), selling = as.numeric(selling), buying = as.numeric(buying))
-
-fib<-read_html("https://www.fibank.bg/bg/valutni-kursove") %>% 
-  html_table()
-fib<-fib[[1]] %>% select(1,5,6) %>% slice(12,6) %>% 
-  rename("cur" = "Валута", "buying" = "Курс купува", "selling" = "Курс продава") %>% 
-  mutate(cur = fct_recode(cur, "USD" = "Щатски долар", "EUR" = "Евро"),
-         bank = "FIBANK", date = today(tzone = "")) %>% 
-  mutate(selling = as.numeric(selling), buying = as.numeric(buying))
-
-ibank<-read_html("https://ibank.bg/bg/valutni-kursove") %>% 
-  html_table()
-ibank<-ibank[[1]] %>% select(1,4,6) %>% slice(1,2) %>% 
-  rename("cur" = "Валута",  "buying" = "Банката купува (Касов)", "selling" = "Банката продава (Касов)") %>% 
-  mutate(bank = "IBANK", date = today(tzone = ""), selling = as.numeric(selling), buying = as.numeric(buying))
 
 dbank<-read_html("https://www.dbank.bg/bg/valutni-kursove") %>% 
   html_table()
@@ -84,7 +70,7 @@ tbi<-tbi[[1]] %>% select(2:3) %>% slice(11,5) %>% mutate(cur = c("USD", "EUR")) 
   select("cur", "buying" = "Купува", "selling" = "Продава") %>% 
   mutate(bank = "TBI", date = today(tzone = ""))
 
-df <- bind_rows(xe, bnb, ckb, post, ibank, dbank, tokuda, tbi) %>% 
+df <- bind_rows(xe, bnb, ckb, post, mun, dbank, tokuda, tbi) %>% 
   mutate(amount = 1) %>% 
   select(date, bank, cur, buying, selling, amount) %>% 
   mutate(Купува = buying * amount, Продава = selling * amount) %>%

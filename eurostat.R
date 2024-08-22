@@ -6,7 +6,6 @@ library(arrow)
 # library(rnaturalearthdata)
 # library(sf)
 # library(patchwork)
-
 toc <- get_eurostat_toc() %>% 
 	janitor::clean_names() %>% 
 	select(-values, -last_table_structure_change) %>% 
@@ -19,24 +18,24 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
   mutate(name = fct_recode(name, "Czechia" = "Czech Rep.", "North Macedonia" = "Macedonia",
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
 #-------------------------------------------------------------------------
-write_parquet(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.parquet")
+write_parquet(tec00011, "shiny/eurostat/tec00011.parquet")
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
-nama_10_pc <- get_eurostat("nama_10_pc", type = "label", time_format = "date") %>%
+tec00011 <- get_eurostat("tec00011", type = "label", time_format = "date") %>%
    mutate_if(is_character, as_factor)
 
-tps00155 %>% 
-  filter(TIME_PERIOD == "2024-01-01") %>%
+gini %>%
+  filter(age == "Total", TIME_PERIOD == "2023-01-01") %>% 
   mutate(geo = fct_reorder(geo, values),
          col = if_else(geo == "Bulgaria", "1", "0")) %>% 
   ggplot(aes(values, geo, fill = col)) +
-  geom_col(position = position_dodge2(preserve = "single")) +
-  scale_x_continuous(expand = expansion(mult = c(0.01, 0.3))) +
-  geom_text(aes(label = space_s(values)),
-            position = position_dodge(width = 1), hjust = -0.1, size = 4.5) +
+  geom_col() +
   scale_fill_manual(values = c("gray50", "red")) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.1))) +
+  geom_text(aes(label = values),
+            position = position_dodge(width = 1), hjust = -0.1, size = 4.5) +
   theme(text = element_text(size = 14), legend.position = "none") +
-  labs(x = "Минимална заплата (\u20AC) към 01.01.2024 г.", y = NULL, 
+  labs(x = "Коефициент Gini", y = NULL, 
        caption = "Източник на данните: Eurostat")
 
 hlth_cd_apr %>% 

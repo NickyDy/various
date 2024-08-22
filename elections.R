@@ -1,6 +1,7 @@
 library(tidyverse)
 library(arrow)
 library(scales)
+library(tidytext)
 #library(sf)
 #library(geodata)
 #library(readxl)
@@ -114,7 +115,20 @@ votes %>%
   filter(vote_date %in% c("Юни_2024", "Април_2023")) %>%
   pivot_wider(names_from = vote_date, values_from = votes) %>% 
   mutate(diff = Юни_2024 - Април_2023) %>%
-  filter(Април_2023 < 30 & diff > 150) %>% view
+  filter(Април_2023 < 50 & diff > 60) %>%
+  unite("section_code", c("section", "code"), sep = "_") %>% 
+  mutate(section_code = reorder_within(section_code, diff, party)) %>%
+  ggplot(aes(diff, section_code, fill = party)) +
+  geom_col(show.legend = F) +
+  scale_y_reordered() +
+  scale_fill_manual(values = c("ДПС" = "purple", "ГЕРБ-СДС" = "blue", "ИТН" = "#0096FF", 
+                               "ПП-ДБ" = "darkblue", "ЛЕВИЦАТА!" = "red")) +
+  scale_x_continuous(expand = expansion(mult = c(.01, .2))) +
+  geom_text(aes(label = diff), position = position_dodge(width = 1), hjust = -0.1, size = 3.5) +
+  labs(x = "Разлика в броя гласове", y = "Населено място, секция", 
+       title = "Разлика в броя гласове на последните (юни, 2024) в сравнение с предпоследните (април, 2023) избори по населено място и секция. Показани са само секции с повече от 60 гласа разлика.") +
+  facet_wrap(vars(party), scales = "free_y", nrow = 1)
+
 votes %>%
   filter(vote_date %in% c("Юни_2024", "Април_2023")) %>%
   pivot_wider(names_from = vote_date, values_from = votes) %>% 
