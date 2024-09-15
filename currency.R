@@ -38,12 +38,6 @@ mun<-mun[[2]] %>% select(2, 4, 5) %>% slice(1, 2) %>%
          bank = "MUNICIPALBANK", date = today(tzone = "")) %>%
   mutate(selling = as.numeric(selling), buying = as.numeric(buying))
 
-# kbc<-read_html("https://www.kbcbank.bg/bg/individualni-klienti/polezni-instrumenti/bankirane/valutni-kursove/") %>% 
-#   html_table()
-# kbc<-kbc[[1]] %>% row_to_names(row_number = 1) %>% select(1,7,8) %>% slice(2,1) %>% 
-#   rename("cur" = "Код", "buying" = "Купува", "selling" = "Продава") %>% 
-#   mutate(bank = "KBC", date = today(tzone = ""), selling = as.numeric(selling), buying = as.numeric(buying))
-
 post<-read_html("https://www.postbank.bg/Valutni-Kursove") %>% 
   html_table()
 post<-post[[2]] %>% row_to_names(row_number = 1) %>% select(2,6,7) %>% slice(1,2) %>% 

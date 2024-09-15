@@ -52,7 +52,7 @@ space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "",
 }
 #--------------------------------------------------------
 votes %>%
-  #filter(code == "122900055") %>% 
+  filter(code == "10200009") %>% 
   mutate(vote_date = fct_relevel(vote_date,
                                  "Юни_2024",
                                  "Април_2023",
@@ -63,7 +63,7 @@ votes %>%
   															 "Март_2017")) %>%
   group_by(vote_date, party) %>%
   summarise(sum_votes = sum(votes)) %>%
-  filter(sum_votes >= 50000) %>%
+  filter(sum_votes >= 1) %>%
   mutate(party = fct_reorder(party, sum_votes)) %>% 
   ggplot(aes(sum_votes, party, fill = party)) +
   geom_col(position = "dodge", show.legend = F) +
@@ -112,8 +112,8 @@ votes %>%
   facet_wrap(~ vote_date, nrow = 1)
 #----------------------------------
 votes %>%
-  filter(vote_date %in% c("Юни_2024", "Април_2023")) %>%
-  pivot_wider(names_from = vote_date, values_from = votes) %>% 
+  filter(vote_date %in% c("Юни_2024", "Април_2023"), party %in% c("ДПС", "ГЕРБ-СДС")) %>%
+  pivot_wider(names_from = vote_date, values_from = votes) %>%
   mutate(diff = Юни_2024 - Април_2023) %>%
   filter(Април_2023 < 50 & diff > 60) %>%
   unite("section_code", c("section", "code"), sep = "_") %>% 
@@ -125,9 +125,16 @@ votes %>%
                                "ПП-ДБ" = "darkblue", "ЛЕВИЦАТА!" = "red")) +
   scale_x_continuous(expand = expansion(mult = c(.01, .2))) +
   geom_text(aes(label = diff), position = position_dodge(width = 1), hjust = -0.1, size = 3.5) +
-  labs(x = "Разлика в броя гласове", y = "Населено място, секция", 
+  labs(x = "Разлика в броя гласове", y = "Населено място_секция", 
        title = "Разлика в броя гласове на последните (юни, 2024) в сравнение с предпоследните (април, 2023) избори по населено място и секция. Показани са само секции с повече от 60 гласа разлика.") +
   facet_wrap(vars(party), scales = "free_y", nrow = 1)
+  
+  # votes %>%
+  #   filter(vote_date %in% c("Юни_2024", "Април_2023"), party %in% c("ДПС", "ГЕРБ-СДС")) %>%
+  #   pivot_wider(names_from = vote_date, values_from = votes) %>%
+  #   mutate(diff = Юни_2024 - Април_2023) %>%
+  #   filter(Април_2023 < 50 & diff > 60) %>%
+  #   unite("section_code", c("section", "code"), sep = "_")
 
 votes %>%
   filter(vote_date %in% c("Юни_2024", "Април_2023")) %>%

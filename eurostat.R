@@ -18,10 +18,10 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
   mutate(name = fct_recode(name, "Czechia" = "Czech Rep.", "North Macedonia" = "Macedonia",
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
 #-------------------------------------------------------------------------
-write_parquet(tec00011, "shiny/eurostat/tec00011.parquet")
+write_parquet(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.parquet")
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
-tec00011 <- get_eurostat("tec00011", type = "label", time_format = "date") %>%
+prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", time_format = "date") %>%
    mutate_if(is_character, as_factor)
 
 gini %>%

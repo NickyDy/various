@@ -319,8 +319,33 @@ covid %>%
   labs(x = "Година", y = "Брой") +
   theme(text = element_text(size = 16))
 #--------------------------------------
-babh <- read_csv("https://data.egov.bg/resource/download/20462b29-9a33-42ba-8061-e0389ca3ffa7/csv")
+library(tidytext)
 
+mvr_stats <- read_csv("data/pol_stats.csv") %>% mutate(crimes_100000_people = round(crimes_100000_people, 1),
+                                                       percent_solved = round(percent_solved, 1))
+glimpse(mvr_stats)
+
+mvr_stats %>% 
+  filter(!location == "Общо за Р България", 
+         #str_detect(crime_types, "убийство|Убийство"),
+         crime_types == "Убийство (чл.115-127 НК)") %>%
+  mutate(location = reorder_within(location, percent_solved, crime_types)) %>%
+  filter(percent_solved > 0) %>% 
+  ggplot(aes(percent_solved, location, fill = percent_solved)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = percent_solved), 
+            position = position_dodge(width = 1), 
+            hjust = -0.1, size = 14, size.unit = "pt") +
+  scale_y_reordered() +
+  scale_x_continuous(expand = expansion(mult = c(.01, .2))) +
+  scale_fill_gradient(low = "red", high = "white") +
+  labs(y = NULL, x = "Процент разкрити престъпления", 
+       title = "Полицейска статистика за 2023 година!",
+       caption = "Източник на данните: МВР") +
+  theme(text = element_text(size = 18)) +
+  facet_wrap(vars(crime_types), scales = "free_y", nrow = 2, 
+             #labeller = labeller(crime_types = label_wrap_gen(40))
+             )
 
 
 
