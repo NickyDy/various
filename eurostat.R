@@ -21,7 +21,7 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
 write_parquet(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.parquet")
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
-prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", time_format = "date") %>%
+gov_10a_exp <- get_eurostat("gov_10a_exp", type = "label", time_format = "date") %>%
    mutate_if(is_character, as_factor)
 
 gini %>%

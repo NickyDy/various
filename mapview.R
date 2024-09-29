@@ -4,6 +4,7 @@ library(sf)
 library(tidygeocoder)
 
 mapviewOptions(basemaps = c("OpenStreetMap", "Esri.WorldImagery", "OpenTopoMap"), fgb = F)
+mapviewOptions(fgb = FALSE)
 
 df <- tibble(address = c("Ямбол", "Бургас")) %>% geocode(address, method = "osm")
 map <- st_read("data/obsh_map.gpkg")
@@ -13,12 +14,13 @@ nb <- st_read("data/nb.gpkg")
 sett <- st_read("data/sett.geojson")
 map_places <- read_csv("data/map_places.csv") %>% st_as_sf(coords = c("long", "lat"), crs = c(4326))
 
+sett %>% mapview(color = "blue", col.regions = "white", alpha.regions = 0)
+
 map %>% 
   #filter(str_detect(obshtina_bg, "^В")) %>% 
   mapview(color = "blue", zcol = "obshtina_bg", col.regions = c("red", "blue", "green", "lightblue", "orange"),
           legend = F)
 
-mapviewOptions(fgb = FALSE)
 zt %>% 
   mapview(color = "blue", zcol = "name", col.regions = c("red", "blue", "green", "lightblue", "orange"),
           legend = F)

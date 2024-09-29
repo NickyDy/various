@@ -3,6 +3,13 @@ library(scales)
 
 diss <- read_csv("data/diss.csv")
 
+#----------
+library(fs)
+files <- dir_ls("/home/nick/Desktop/R/data", glob = "*.csv")
+
+df <- map(files, read_csv) %>% bind_rows()
+#-----------------------------------------
+
 find_mode <- function(v) {
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
