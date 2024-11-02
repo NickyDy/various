@@ -5,9 +5,14 @@ diss <- read_csv("data/diss.csv")
 
 #----------
 library(fs)
-files <- dir_ls("/home/nick/Desktop/R/data", glob = "*.csv")
+library(readxl)
+files <- dir_ls("~/Downloads/spreadsheet", glob = "*.xlsx")
 
-df <- map(files, read_csv) %>% bind_rows()
+sheet_5 <- function(x){
+  read_excel(x, sheet = 5)
+}
+
+oct_2024 <- map(files, sheet_5) %>% bind_rows()
 #-----------------------------------------
 
 find_mode <- function(v) {

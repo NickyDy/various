@@ -13,8 +13,11 @@ nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
 sett <- st_read("data/sett.geojson")
 map_places <- read_csv("data/map_places.csv") %>% st_as_sf(coords = c("long", "lat"), crs = c(4326))
+sof_sam <- st_read("sof_samokov.kmz")
 
 sett %>% mapview(color = "blue", col.regions = "white", alpha.regions = 0)
+
+sof_sam %>% mapview()
 
 map %>% 
   #filter(str_detect(obshtina_bg, "^В")) %>% 

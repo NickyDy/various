@@ -7,11 +7,9 @@ sett <- st_read("data/sett.geojson")
 df <- tibble(address = "Ямбол, Ормана") %>% geocode(address, method = "osm")
 obsh_map <- st_read("data/obsh_map.gpkg")
 #obsh_map <- st_read("data/municipalities.geojson")
-map_places <- read_csv("data/map_places.csv")
 
+map_places <- read_csv("data/map_places.csv")
 st_karadjovo <- read_csv("data/st_karadjovo.csv")
-map_sites <- read_csv("map_sites.csv") %>% janitor::clean_names() %>% 
-  filter(lat != 0, lon != 0)
 dis_plots <- read_csv("data/dis_plots.csv")
 
 drag <- read_csv("drag.csv", col_types = "ddf") %>% 

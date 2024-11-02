@@ -19,13 +19,63 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
 #-------------------------------------------------------------------------
 write_parquet(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.parquet")
+write_parquet(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.parquet")
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
-gov_10a_exp <- get_eurostat("gov_10a_exp", type = "label", time_format = "date") %>%
+prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", time_format = "date") %>%
    mutate_if(is_character, as_factor)
 
-gini %>%
-  filter(age == "Total", TIME_PERIOD == "2023-01-01") %>% 
+data <- hlth_cd_iap %>% 
+  filter(indic_he == "Premature death", unit == "Rate",
+         !str_detect(geo, "^Euro")) %>% 
+  summarise(m = mean(values), .by = geo) %>% 
+  mutate(col = case_when(m > 150 ~ "0",
+                         m < 50 ~ "2",
+                         .default = "1"))
+
+hlth_cd_iap %>% 
+  filter(indic_he == "Premature death", unit == "Rate",
+         !str_detect(geo, "^Euro")) %>% 
+  ggplot(aes(TIME_PERIOD, values)) +
+  geom_line(linewidth = 0.1) +
+  geom_point() +
+  geom_text(data = data,
+            aes(label = paste(round(m, 0)), color = col, fontface = "bold", x = as.Date("2014-01-01"), y = 200),
+            size = 8, vjust = -0.2) +
+  scale_color_manual(values = c("1" = "orange", "0" = "red", "2" = "green")) +
+  labs(x = "Години", y = "Брой преждевременно починали на 100 000 души",
+       title = "Преждевременна смърт в резултат на замърсяването на въздуха. Средното за периода е посочено с едър шрифт.") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  facet_wrap(vars(geo))
+
+data_y <- hlth_cd_iap %>% 
+  filter(indic_he == "Years of life lost", unit == "Rate",
+         !str_detect(geo, "^Euro")) %>% 
+  summarise(m = mean(values), .by = geo) %>% 
+  mutate(col = case_when(m > 1500 ~ "0",
+                         m < 500 ~ "2",
+                         .default = "1"))
+
+hlth_cd_iap %>% 
+  filter(indic_he == "Years of life lost", unit == "Rate",
+         !str_detect(geo, "^Euro")) %>% 
+  ggplot(aes(TIME_PERIOD, values)) +
+  geom_line(linewidth = 0.1) +
+  geom_point() +
+  geom_text(data = data_y,
+            aes(label = paste(round(m, 0)), color = col, fontface = "bold", x = as.Date("2014-01-01"), y = 2000),
+            size = 8, vjust = -0.2) +
+  scale_color_manual(values = c("1" = "orange", "0" = "red", "2" = "green")) +
+  labs(x = "Години", y = "Брой загубени години живот на 100 000 души",
+       title = "Преждевременна смърт в резултат на замърсяването на въздуха. Средното за периода е посочено с едър шрифт.") +
+  theme(text = element_text(size = 16), legend.position = "none") +
+  facet_wrap(vars(geo))
+
+prc_ppp_ind %>%
+  filter(na_item == "Nominal expenditure per inhabitant (in euro)",
+         ppp_cat == "Actual individual consumption",
+         TIME_PERIOD == "2023-01-01",
+         !str_detect(geo, "^Euro"), !str_detect(geo, "^Candidate")) %>% 
   mutate(geo = fct_reorder(geo, values),
          col = if_else(geo == "Bulgaria", "1", "0")) %>% 
   ggplot(aes(values, geo, fill = col)) +
