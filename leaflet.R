@@ -16,7 +16,12 @@ drag <- read_csv("drag.csv", col_types = "ddf") %>%
 	mutate(Observed = fct_recode(Observed, "Ansent" = "0", "Present" = "1"))
 glimpse(drag)
 
-pal <- colorNumeric(palette = "Reds", domain = map_sites$population)
+pal <- colorNumeric(palette = "Reds", domain = map$perc)
+
+leaflet() %>% 
+  addProviderTiles(providers$OpenStreetMap) %>% 
+  addPolygons(data = map, fill = ~perc, 
+              label = ~obshtina_bg, color = ~pal)
 
 leaflet() %>% 
   addProviderTiles(providers$OpenStreetMap) %>% 

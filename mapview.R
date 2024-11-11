@@ -21,8 +21,7 @@ sof_sam %>% mapview()
 
 map %>% 
   #filter(str_detect(obshtina_bg, "^В")) %>% 
-  mapview(color = "blue", zcol = "obshtina_bg", col.regions = c("red", "blue", "green", "lightblue", "orange"),
-          legend = F)
+  mapview(color = "blue", zcol = "perc", legend = T)
 
 zt %>% 
   mapview(color = "blue", zcol = "name", col.regions = c("red", "blue", "green", "lightblue", "orange"),

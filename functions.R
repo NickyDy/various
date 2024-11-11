@@ -6,6 +6,8 @@ diss <- read_csv("data/diss.csv")
 #----------
 library(fs)
 library(readxl)
+
+unzip(zipfile = "~/Downloads/spreadsheet.zip", exdir = "~/Downloads/spreadsheet")
 files <- dir_ls("~/Downloads/spreadsheet", glob = "*.xlsx")
 
 sheet_5 <- function(x){
@@ -13,6 +15,8 @@ sheet_5 <- function(x){
 }
 
 oct_2024 <- map(files, sheet_5) %>% bind_rows()
+glimpse(oct_2024)
+oct_2024 %>% count(`Номер на СИК`) %>% view
 #-----------------------------------------
 
 find_mode <- function(v) {
