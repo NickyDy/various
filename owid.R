@@ -1,5 +1,6 @@
 library(tidyverse)
 library(scales)
+library(tidytext)
 options(scipen = 999)
 
 energy <- read_csv("https://nyc3.digitaloceanspaces.com/owid-public/data/energy/owid-energy-data.csv")
@@ -10,17 +11,17 @@ gini <- read_csv("gini.csv") %>% mutate(across(`1960`:`2021`, as.double)) %>%
 	summarise(gini = mean(gini))
 pop <- read_csv("data/world_population_2023.csv") %>% janitor::clean_names()
 
-colors <- c("Биогориво" = "lightblue", "Въглища" = "black",
+colors <- c("Биогориво" = "green", "Въглища" = "black",
             "Природен газ" = "#088F8F", "Хидро" = "blue",
             "Ядрена" = "red", "Нефт" = "brown",
-            "Слънце" = "green", "Вятър" = "lightgreen")
+            "Слънце" = "orange", "Вятър" = "skyblue")
 
-glimpse(covid)
+glimpse(energy)
 
 energy %>% count(year) %>% pull(year)
 
 energy %>%
-  filter(country %in% c("World"), year == 2022) %>%
+  filter(country %in% c("Greece", "Turkey", "Bulgaria", "North Macedonia", "Serbia", "Romania"), year == 2023) %>%
   select(country, year, contains("share_elec"), -low_carbon_share_elec, -fossil_share_elec, -renewables_share_elec,
          -other_renewables_share_elec, -other_renewables_share_elec_exc_biofuel) %>%
   pivot_longer(-c(country, year)) %>%
@@ -28,18 +29,21 @@ energy %>%
   mutate(name = fct_recode(name, "Биогориво" = "biofuel_share_elec", "Въглища" = "coal_share_elec",
                            "Природен газ" = "gas_share_elec", "Хидро" = "hydro_share_elec",
                            "Ядрена" = "nuclear_share_elec", "Нефт" = "oil_share_elec",
-                           "Слънце" = "solar_share_elec", "Вятър" = "wind_share_elec"), 
-         name = fct_reorder(name, value)) %>%
-  ggplot(aes(value, name, fill = name)) +
+                           "Слънце" = "solar_share_elec", "Вятър" = "wind_share_elec"),
+         col = name,
+         name = reorder_within(name, value, country)) %>%
+  ggplot(aes(value, name, fill = col)) +
   geom_col(show.legend = F) +
   scale_x_continuous(expand = expansion(mult = c(.01, .25))) +
+  scale_y_reordered() +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = paste0(round(value, 1), "%")), hjust = -0.1, size = 5) +
-  labs(x = "Проценти", y = NULL, title = "Енергиен микс") +
-  theme(text = element_text(size = 14), 
-        axis.title.x = element_text(vjust = 1, hjust = 1), 
-        axis.title.y = element_text(vjust = 1, hjust = 1)) +
-  facet_wrap(vars(country))
+  labs(x = "Проценти", y = NULL, title = "Енергиен микс (2023)") +
+  theme(text = element_text(size = 18), 
+        axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  facet_wrap(vars(country), scales = "free_y")
 
 pop %>% 
 	slice_max(order_by = population2023, n = 50) %>% 

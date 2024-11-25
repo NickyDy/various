@@ -2,6 +2,7 @@ library(tidyverse)
 library(eurostat)
 library(scales)
 library(arrow)
+library(tidytext)
 # library(rnaturalearth)
 # library(rnaturalearthdata)
 # library(sf)
@@ -71,22 +72,28 @@ hlth_cd_iap %>%
   theme(text = element_text(size = 16), legend.position = "none") +
   facet_wrap(vars(geo))
 
-prc_ppp_ind %>%
-  filter(na_item == "Nominal expenditure per inhabitant (in euro)",
-         ppp_cat == "Actual individual consumption",
-         TIME_PERIOD == "2023-01-01",
-         !str_detect(geo, "^Euro"), !str_detect(geo, "^Candidate")) %>% 
-  mutate(geo = fct_reorder(geo, values),
-         col = if_else(geo == "Bulgaria", "1", "0")) %>% 
+demo_find %>%
+  filter(indic_de == "Proportion of live births outside marriage",
+         TIME_PERIOD == c("2022-01-01", "2007-01-01"),
+         !str_detect(geo, "Germany including former GDR"),
+         !str_detect(geo, "^Euro")
+         ) %>% view
+  mutate(col = geo, geo = reorder_within(geo, values, TIME_PERIOD),
+         geo = fct_recode(geo, "Turkey" = "Türkiye"),
+         TIME_PERIOD = fct_recode(as.character(TIME_PERIOD), "2006" = "2007-01-01", "2021" = "2022-01-01"),
+         col = if_else(col == "Bulgaria", "1", "0")) %>%
   ggplot(aes(values, geo, fill = col)) +
   geom_col() +
+  scale_y_reordered() +
   scale_fill_manual(values = c("gray50", "red")) +
   scale_x_continuous(expand = expansion(mult = c(0.01, 0.1))) +
-  geom_text(aes(label = values),
+  geom_text(aes(label = paste0(values, "%")),
             position = position_dodge(width = 1), hjust = -0.1, size = 4.5) +
-  theme(text = element_text(size = 14), legend.position = "none") +
-  labs(x = "Коефициент Gini", y = NULL, 
-       caption = "Източник на данните: Eurostat")
+  theme(text = element_text(size = 18), legend.position = "none",
+        axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  labs(title = "Процент извънбрачни деца, родени през 2006 и 2021 г.", y = NULL, x = NULL,
+       caption = "Източник на данните: Eurostat") +
+  facet_wrap(vars(TIME_PERIOD), scales = "free_y")
 
 hlth_cd_apr %>% 
   filter(icd10 == "Total",

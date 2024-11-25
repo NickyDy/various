@@ -67,22 +67,22 @@ tot_year <- hipc %>%
   mutate(year = year(TIME_PERIOD)) %>% 
   filter(coicop == "All-items HICP",
          geo == "Bulgaria",
-         between(TIME_PERIOD, as.Date("2019-01-01"), as.Date("2024-06-01"))) %>% 
+         between(TIME_PERIOD, as.Date("2019-01-01"), as.Date("2024-10-01"))) %>% 
   summarise(s = round(sum(values), 1), .by = year)
 tot <- hipc %>%
   filter(coicop == "All-items HICP",
          geo == "Bulgaria",
-         between(TIME_PERIOD, as.Date("2019-01-01"), as.Date("2024-06-01"))) %>% 
+         between(TIME_PERIOD, as.Date("2019-01-01"), as.Date("2024-10-01"))) %>% 
   summarise(s = round(sum(values), 1))
 seg <- tibble(
-  a = c("2019-01-01", "2024-06-01"),
+  a = c("2019-01-01", "2024-09-01"),
   b = c(16, 16)
 )
 
 hipc %>%
   filter(coicop == "All-items HICP",
          geo == "Bulgaria",
-         between(TIME_PERIOD, as.Date("2019-01-01"), as.Date("2024-07-01"))) %>%
+         between(TIME_PERIOD, as.Date("2019-01-01"), as.Date("2024-10-01"))) %>%
   mutate(col = values >= 0, csum = round(cumsum(values), 1)) %>% 
   filter(TIME_PERIOD >= "2019-01-01") %>% 
   ggplot(aes(TIME_PERIOD, csum)) +
@@ -96,16 +96,16 @@ hipc %>%
              color = "black", lty = 2) +
   scale_color_manual(values = c("red", "black")) +
   labs(x = NULL, y = "Инфлация (%)", 
-       title = "Натрупана обща инфлация (Общ ХИПЦ) - по месеци, по години и общо за целия период - януари, 2019-юни, 2024") +
+       title = "Натрупана обща инфлация (Общ ХИПЦ) - по месеци, по години и общо за целия период - януари, 2019-септември, 2024") +
   annotate("text", x = as.Date("2019-07-01"), y = 5, label = paste0(tot_year$s[1], "%"), size = 10) +
   annotate("text", x = as.Date("2020-07-01"), y = 5, label = paste0(tot_year$s[2], "%"), size = 10) +
   annotate("text", x = as.Date("2021-07-01"), y = 8, label = paste0(tot_year$s[3], "%"), size = 10) +
   annotate("text", x = as.Date("2022-07-01"), y = 22, label = paste0(tot_year$s[4], "%"), size = 10) +
   annotate("text", x = as.Date("2023-07-01"), y = 29, label = paste0(tot_year$s[5], "%"), size = 10) +
-  annotate("text", x = as.Date("2024-07-01"), y = 30, label = paste0(tot_year$s[6], "%"), size = 10) +
+  annotate("text", x = as.Date("2024-07-01"), y = 31, label = paste0(tot_year$s[6], "%"), size = 10) +
   annotate("text", x = as.Date("2021-07-01"), y = 16, label = paste0(tot$s, "%"), size = 15) +
   geom_segment(aes(x = as.Date("2019-01-01"), y = 16, xend = as.Date("2021-03-01"), yend = 16)) +
-  geom_segment(aes(x = as.Date("2021-11-01"), y = 16, xend = as.Date("2024-06-01"), yend = 16)) +
+  geom_segment(aes(x = as.Date("2021-11-01"), y = 16, xend = as.Date("2024-09-01"), yend = 16)) +
   geom_point(aes(as.Date(a), b), data = seg, size = 3)
   #---------------------------------------------------
 loc_sex <- read_delim("loc_sex.csv", col_names = F, na = "-") %>% select(-X46)

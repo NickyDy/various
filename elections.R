@@ -18,7 +18,6 @@ write_parquet(votes, "data/votes.parquet")
 write_parquet(votes, "shiny/elections/votes.parquet")
 write_csv(oct_2024_new, "data/oct_2024.csv")
 
-votes %>% count(party) %>% view
 glimpse(df)
 df %>% map_dfr(~ sum(is.na(.))) %>% View()
 #-----------------------------------------
@@ -57,7 +56,7 @@ space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "",
 }
 #--------------------------------------------------------
 votes %>%
-  filter(code %in% c(petar_beron_qm)) %>%
+  #filter(code == "13700022") %>%
   mutate(vote_date = fct_relevel(vote_date,
                                  "Октомври_2024",
                                  "Юни_2024",
@@ -69,7 +68,7 @@ votes %>%
   															 "Март_2017")) %>%
   group_by(vote_date, party) %>%
   summarise(sum_votes = sum(votes)) %>%
-  filter(sum_votes >= 5) %>%
+  filter(sum_votes >= 2) %>%
   mutate(party = fct_reorder(party, sum_votes)) %>%
   ggplot(aes(sum_votes, party)) +
   geom_col(aes(fill = party), position = "dodge", show.legend = F) +
@@ -80,7 +79,7 @@ votes %>%
   geom_text(aes(label = space_s(sum_votes)), 
   					position = position_dodge(width = 1), 
   					hjust = -0.05, size = 10, size.unit = "pt") +
-  theme(text = element_text(size = 10), 
+  theme(text = element_text(size = 12), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", title = NULL,
@@ -141,14 +140,14 @@ votes %>%
   theme(axis.title = element_text(hjust = 1)) +
   facet_wrap(vars(oblast), scales = "free_y", nrow = 3)
 #----------------------------------
-votes %>% filter(party == "ДПС-НH", vote_date == "Октомври_2024") %>% arrange(-votes) %>% view
+votes %>% 
+  #filter(party == "ДПС-НH", vote_date == "Октомври_2024") %>%
   mutate(party = fct_recode(party, "ДПС-НH" = "ДПС")) %>% 
-  filter(vote_date %in% c("Октомври_2024", "Юни_2024"), 
-         party %in% c("ДПС-НH", "ГЕРБ-СДС")) %>%
+  filter(vote_date %in% c("Октомври_2024", "Юни_2024")) %>%
   pivot_wider(names_from = vote_date, values_from = votes) %>%
-  mutate(diff = Октомври_2024 - Юни_2024) %>%
-  filter(Юни_2024 < 50 & diff > 70) %>%
-  unite("section_code", c("section", "code"), sep = "_") %>% 
+  mutate(diff = Октомври_2024 / Юни_2024) %>%
+  filter(Юни_2024 > 2 & diff > 10) %>% view
+  unite("section_code", c("section", "code"), sep = " - ") %>% 
   mutate(section_code = reorder_within(section_code, diff, party)) %>%
   ggplot(aes(diff, section_code, fill = party)) +
   geom_col(show.legend = F) +
@@ -157,8 +156,8 @@ votes %>% filter(party == "ДПС-НH", vote_date == "Октомври_2024") %>
                                "ПП-ДБ" = "darkblue", "ЛЕВИЦАТА!" = "red")) +
   scale_x_continuous(expand = expansion(mult = c(.01, .2))) +
   geom_text(aes(label = diff), position = position_dodge(width = 1), hjust = -0.1, size = 3.5) +
-  labs(x = "Разлика в броя гласове", y = "Населено място_секция", 
-       title = "Разлика в броя гласове на последните (октомври, 2024) в сравнение с предпоследните (юни, 2024) избори по населено място и секция.\nПоказани са само секции с повече от 70 гласа разлика.") +
+  labs(x = "Брой гласове", y = "Населено място - секция", 
+       title = "Разлика в броя гласове на последните (октомври, 2024) в сравнение с предпоследните (юни, 2024) избори, получени от съответните партии.\nПоказани са само секции с повече от 80 гласа разлика.") +
   facet_wrap(vars(party), scales = "free_y", nrow = 1) +
   theme(text = element_text(size = 14))
   
@@ -513,6 +512,9 @@ oct_2022_pref <- read_parquet("data/pref/oct_2022_pref.parquet")
 nov_2021_pref <- read_parquet("data/pref/nov_2021_pref.parquet")
 jul_2021_pref <- read_parquet("data/pref/jul_2021_pref.parquet")
 apr_2021_pref <- read_parquet("data/pref/apr_2021_pref.parquet")
+
+apr_2021_pref %>% map_dfr(sum(is.na(.)))
+apr_2021_pref %>% map_dfr(sum(. == 0))
 
 #write_parquet(apr_2023_pref_new, "data/pref/apr_2023_pref.parquet")
 
