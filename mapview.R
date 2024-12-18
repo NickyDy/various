@@ -14,10 +14,12 @@ nb <- st_read("data/nb.gpkg")
 sett <- st_read("data/sett.geojson")
 map_places <- read_csv("data/map_places.csv") %>% st_as_sf(coords = c("long", "lat"), crs = c(4326))
 sof_sam <- st_read("sof_samokov.kmz")
+munic_map <- st_read("data/municipalities.geojson")
 
 sett %>% mapview(color = "blue", col.regions = "white", alpha.regions = 0)
 
-sof_sam %>% mapview()
+munic_map %>% mapview(color = "blue", zcol = "nuts4",
+                     col.regions = "white", alpha.regions = 0)
 
 map %>% 
   #filter(str_detect(obshtina_bg, "^В")) %>% 

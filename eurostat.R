@@ -363,7 +363,7 @@ teiis080 <- get_eurostat("teiis080", type = "label", time_format = "date") %>%
 
 teiis080 %>%
   filter(
-    time > "2023-01-01" & time < "2023-03-01",
+    TIME_PERIOD > "2024-01-01",
     unit == "Percentage change m/m-12 (CA)",
     !is.na(values),
     !geo %in% c(
@@ -381,17 +381,17 @@ teiis080 %>%
   geom_col(show.legend = F) +
   geom_text(aes(label = values), hjust = -0.1, size = 4, color = "black") +
   scale_x_continuous(expand = expansion(mult = 0.14)) +
-  scale_fill_manual(values = c("#228B22", "#F8766D", "#00BFC4")) +
-  theme(text = element_text(size = 16)) +
+  scale_fill_manual(values = c("red", "#F8766D", "#00BFC4")) +
+  theme(text = element_text(size = 12)) +
   labs(x = "Процентна промяна в индустриалното производство в сравнение със същия месец на миналата година", y = NULL) +
-  facet_wrap(~time, ncol = 6)
+  facet_wrap(~TIME_PERIOD, ncol = 6)
 
 sdg_16_50 <- get_eurostat("sdg_16_50", type = "label", time_format = "date") %>%
   mutate_if(is_character, as_factor)
 
 sdg_16_50 %>%
   filter(
-    time == "2022-01-01",
+    TIME_PERIOD == "2023-01-01",
     !geo %in% c(
       "Euro area (EA11-1999, EA12-2001, EA13-2007, EA15-2008, EA16-2009, EA17-2011, EA18-2014, EA19-2015)",
       "European Union (EU6-1958, EU9-1973, EU10-1981, EU12-1986, EU15-1995, EU25-2004, EU27-2007, EU28-2013, EU27-2020)",
@@ -417,7 +417,7 @@ tps00122 %>%
   filter(
     sex == "Total", 
     age == "Total",
-    time == "2020-01-01",
+    TIME_PERIOD == "2021-01-01",
     !geo %in% c(
       "Euro area (EA11-1999, EA12-2001, EA13-2007, EA15-2008, EA16-2009, EA17-2011, EA18-2014, EA19-2015)",
       "European Union (EU6-1958, EU9-1973, EU10-1981, EU12-1986, EU15-1995, EU25-2004, EU27-2007, EU28-2013, EU27-2020)",
@@ -434,7 +434,7 @@ tps00122 %>%
   geom_text(aes(label = values), hjust = -0.1, size = 4, color = "black") +
   scale_x_continuous(expand = expansion(mult = 0.09)) +
   theme(text = element_text(size = 16)) +
-  labs(x = "Брой самоубийства на 100 000 души за 2019 година", y = NULL)
+  labs(x = "Брой самоубийства на 100 000 души за 2020 година", y = NULL)
 
 tps00146 <- get_eurostat("tps00146", type = "label", time_format = "date") %>%
   mutate_if(is_character, as_factor)
@@ -589,10 +589,10 @@ p1 <- ei_isen_m %>%
   theme(text = element_text(size = 16)) +
   labs(x = "Внос на природен газ (GWh) в ЕС към 01.04.2023", y = NULL)
 
-p2 <- ei_isen_m %>%
+ei_isen_m %>%
   filter(
     indic == "Consumption of electricity - GWh",
-    time == "2023-04-01",
+    TIME_PERIOD == "2024-10-01",
     !geo %in% c(
       "Euro area (EA11-1999, EA12-2001, EA13-2007, EA15-2008, EA16-2009, EA17-2011, EA18-2014, EA19-2015)",
       "European Union (EU6-1958, EU9-1973, EU10-1981, EU12-1986, EU15-1995, EU25-2004, EU27-2007, EU28-2013, EU27-2020)",
@@ -622,7 +622,7 @@ earn_mw_cur %>%
       "European Union (EU6-1958, EU9-1973, EU10-1981, EU12-1986, EU15-1995, EU25-2004, EU27-2007, EU28-2013, EU27-2020)",
       "Euro area - 18 countries (2014)", "Euro area - 19 countries  (from 2015)",
       "European Union - 27 countries (from 2020)", "European Union - 28 countries (2013-2020)"),
-    time == "2023-01-01") %>%
+    TIME_PERIOD == "2024-07-01") %>%
   mutate(geo = fct_reorder(geo, values), col = case_when(geo == "Bulgaria" ~ "0", TRUE ~ "1")) %>%
   mutate(geo = fct_recode(geo, "Germany" = "Germany (until 1990 former territory of the FRG)")) %>% 
   ggplot(aes(values, geo, fill = col)) +
@@ -645,7 +645,7 @@ nrg_pc_204 %>%
     !geo %in% c(
       "European Union - 27 countries (from 2020)",
       "Euro area (EA11-1999, EA12-2001, EA13-2007, EA15-2008, EA16-2009, EA17-2011, EA18-2014, EA19-2015, EA20-2023)"),
-    time == "2023-01-01") %>%
+    TIME_PERIOD == "2024-01-01") %>%
   mutate(geo = fct_reorder(geo, values), col = case_when(geo == "Bulgaria" ~ "0", TRUE ~ "1")) %>%
   select(geo, col, values) %>% 
   ggplot(aes(values, geo, fill = col)) +
@@ -653,7 +653,7 @@ nrg_pc_204 %>%
   scale_x_continuous(expand = expansion(mult = c(0.01, 0.15))) +
   geom_text(aes(label = paste0(values, " \u20AC/KWh")), hjust = -0.02, size = 5, color = "black") +
   theme(text = element_text(size = 16)) +
-  labs(x = "Цена на тока в ЕС към 01.01.2023 г.", y = NULL)
+  labs(x = "Цена на тока в ЕС към 01.01.2024 г.", y = NULL)
 
 ei_cphi_m <- get_eurostat("ei_cphi_m", type = "label", time_format = "date") %>%
   mutate_if(is_character, as_factor)

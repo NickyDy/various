@@ -6,7 +6,7 @@ library(sf)
 sett <- st_read("data/sett.geojson")
 df <- tibble(address = "Ямбол, Ормана") %>% geocode(address, method = "osm")
 obsh_map <- st_read("data/obsh_map.gpkg")
-#obsh_map <- st_read("data/municipalities.geojson")
+minic_map <- st_read("data/municipalities.geojson")
 
 map_places <- read_csv("data/map_places.csv")
 st_karadjovo <- read_csv("data/st_karadjovo.csv")
@@ -62,7 +62,7 @@ leaflet() %>%
   setView(lng = 144, lat = -37, zoom = 7)
 
 leaflet() %>%
-  addProviderTiles(providers$OpenTopoMap) %>% 
+  addProviderTiles(providers$OpenStreetMap) %>% 
   addPolygons(data = obsh_map, fill = F, weight = 2) %>%
   #addCircles(data = sections, color = "red", weight = 2) %>%
   setView(lng = 26, lat = 42.8, zoom = 7)
