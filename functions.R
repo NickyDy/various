@@ -1,9 +1,63 @@
 library(tidyverse)
 library(scales)
+library(arrow)
 
 diss <- read_csv("data/diss.csv")
+votes <- read_parquet("shiny/elections/votes.parquet")
+#-------------------------
+sections <- votes %>% 
+  #filter(party == "ДПС-НH", vote_date == "Октомври_2024") %>%
+  mutate(party = fct_recode(party, "ДПС-НH" = "ДПС")) %>% 
+  filter(vote_date %in% c("Октомври_2024", "Юни_2024")) %>%
+  pivot_wider(names_from = vote_date, values_from = votes) %>%
+  mutate(diff = Октомври_2024 / Юни_2024, 
+         title = str_glue("Област: {oblast}, Община: {obshtina}, Населено място: {section}, Секция: {code}, Партия: {party}")) %>%
+  filter(Юни_2024 > 2 & diff > 20) %>% 
+  select(oblast, obshtina, section, code, diff, party, title)
 
-#----------
+graph <- function(sections, title){
+  votes %>%
+    filter(code == sections) %>%
+    mutate(vote_date = fct_relevel(vote_date,
+                                   "Октомври_2024",
+                                   "Юни_2024",
+                                   "Април_2023",
+                                   "Октомври_2022", 
+                                   "Ноември_2021", 
+                                   "Юли_2021", 
+                                   "Април_2021", 
+                                   "Март_2017")) %>%
+    group_by(vote_date, party) %>%
+    summarise(sum_votes = sum(votes)) %>%
+    filter(sum_votes >= 2) %>%
+    mutate(party = fct_reorder(party, sum_votes)) %>%
+    ggplot(aes(sum_votes, party)) +
+    geom_col(aes(fill = party), position = "dodge", show.legend = F) +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    scale_y_discrete(labels = scales::label_wrap(50)) +
+    scale_x_continuous(expand = expansion(mult = c(.05, .9))) +
+    scale_fill_manual(values = colors) +
+    geom_text(aes(label = space_s(sum_votes)), 
+              position = position_dodge(width = 1), 
+              hjust = -0.05, size = 10, size.unit = "pt") +
+    theme(text = element_text(size = 12), 
+          axis.text.x = element_blank(), 
+          axis.ticks.x = element_blank()) +
+    labs(y = NULL, x = "Брой гласове", title = title,
+         caption = "Бележка: Оцветени са само партиите и коалициите влизали/щи в Парламента, останалите са в сиво.
+       Източник на данните: ЦИК.") +
+    facet_wrap(~ vote_date, nrow = 1)
+}
+
+by_section <- sections %>% 
+  mutate(plot = map2(code, title, graph),
+         path = str_glue("graphs/{oblast}, {obshtina}, {section}, {code}.png"))
+
+walk2(
+  by_section$path,
+  by_section$plot,
+  \(path, plot) ggsave(path, plot, width = 18, height = 10))
+#------------------------------------
 library(fs)
 library(readxl)
 

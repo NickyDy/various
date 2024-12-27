@@ -1,8 +1,8 @@
 library(tidyverse)
 library(arrow)
 library(scales)
-library(tidytext)
-library(sf)
+#library(tidytext)
+#library(sf)
 #library(geodata)
 #library(readxl)
 glimpse(oct_2024)
@@ -56,7 +56,7 @@ space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "",
 }
 #--------------------------------------------------------
 votes %>%
-  #filter(code == "13700022") %>%
+  filter(code == "312500046") %>%
   mutate(vote_date = fct_relevel(vote_date,
                                  "Октомври_2024",
                                  "Юни_2024",
@@ -146,7 +146,7 @@ votes %>%
   filter(vote_date %in% c("Октомври_2024", "Юни_2024")) %>%
   pivot_wider(names_from = vote_date, values_from = votes) %>%
   mutate(diff = Октомври_2024 / Юни_2024) %>%
-  filter(Юни_2024 > 2 & diff > 10) %>% view
+  filter(Юни_2024 > 2 & diff > 15) %>% pull(code) %>% str_flatten(collapse = "', '")
   unite("section_code", c("section", "code"), sep = " - ") %>% 
   mutate(section_code = reorder_within(section_code, diff, party)) %>%
   ggplot(aes(diff, section_code, fill = party)) +
