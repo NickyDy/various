@@ -11,9 +11,20 @@ sections <- votes %>%
   filter(vote_date %in% c("Октомври_2024", "Юни_2024")) %>%
   pivot_wider(names_from = vote_date, values_from = votes) %>%
   mutate(diff = Октомври_2024 / Юни_2024, 
-         title = str_glue("Област: {oblast}, Община: {obshtina}, Населено място: {section}, Секция: {code}, Партия: {party}")) %>%
+         title = str_glue("Област: {oblast}, Община: {obshtina}, 
+                          Населено място: {section}, Секция: {code}, 
+                          Партия: {party}")) %>%
   filter(Юни_2024 > 2 & diff > 20) %>% 
   select(oblast, obshtina, section, code, diff, party, title)
+
+risk_sec <- votes %>% 
+  filter(!oblast == "Извън страната") %>%
+  summarise(v = var(votes, na.rm = T), .by = c(oblast, obshtina, section, code)) %>%
+  mutate(v = round(v, 1),
+         title = str_glue("Област: {oblast}, Община: {obshtina}, 
+                          Населено място: {section}, Секция: {code}")) %>% 
+  slice_max(v, n = 20) %>% 
+  select(oblast, obshtina, section, code, title)
 
 graph <- function(sections, title){
   votes %>%
