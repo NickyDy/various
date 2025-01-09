@@ -1,6 +1,7 @@
 library(tidyverse)
 library(mapview)
 library(sf)
+library(jsonlite)
 #library(tidygeocoder)
 
 mapviewOptions(basemaps = c("OpenStreetMap"), fgb = F)
@@ -17,22 +18,28 @@ sof_sam <- st_read("sof_samokov.kmz")
 oblasti <- st_read("data/oblasti.geojson")
 obshtini <- st_read("data/obshtini.geojson")
 sett <- st_read("data/settlements.geojson")
-ekatte <- read_csv("data/ekatte.csv")
+ekatte <- fromJSON("data/ek_atte.json") %>%
+  select(1:18) %>% drop_na(ekatte)
 
-sett %>% 
-  mapview(color = "blue", zcol = "sett_name",
-                    label = df_sett$sett_name,
-                    legend = F, col.regions = "white", 
-                    alpha.regions = 0)
+elev <- ekatte %>% select(ekatte, altitude)
+sett_elev <- sett %>% left_join(elev, by = "ekatte")
+
+colors <- c('#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#990000')
+
+sett_elev %>% 
+  mapview(color = "blue", zcol = "altitude",
+                    label = sett_elev$altitude, lwd = 1,
+                    legend = F, col.regions = colors, 
+                    alpha.regions = 0.5)
 
 obshtini %>% 
   mapview(color = "blue", zcol = "obshtina_name",
-                     label = obshtini$obshtina_name,
+                     label = obshtini$obshtina_name, lwd = 2,
                      legend = F, col.regions = "white", 
                      alpha.regions = 0)
 oblasti %>% 
   mapview(color = "blue", zcol = "oblast_name",
-          label = oblasti$oblast_name,
+          label = oblasti$oblast_name, lwd = 2,
           legend = F, col.regions = "white", 
           alpha.regions = 0)
 
