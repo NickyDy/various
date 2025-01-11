@@ -64,8 +64,8 @@ tbi<-tbi[[1]] %>% select(2:3) %>% slice(11,5) %>% mutate(cur = c("USD", "EUR")) 
   select("cur", "buying" = "Купува", "selling" = "Продава") %>% 
   mutate(bank = "TBI", date = today(tzone = ""))
 
-df <- bind_rows(xe, bnb, ckb, post, mun, dbank, tokuda, tbi) %>% 
-  mutate(amount = 2000) %>% 
+df <- bind_rows(xe, bnb, ckb, mun, dbank, tokuda, tbi) %>% 
+  mutate(amount = 1) %>% 
   select(date, bank, cur, buying, selling, amount) %>% 
   mutate(Купува = buying * amount, Продава = selling * amount) %>%
   group_by(cur) %>% 

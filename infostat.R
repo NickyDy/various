@@ -76,8 +76,7 @@ tot <- hipc %>%
   summarise(s = round(sum(values), 1))
 seg <- tibble(
   a = c("2019-01-01", "2024-11-01"),
-  b = c(16, 16)
-)
+  b = c(16, 16))
 
 hipc %>%
   filter(coicop == "All-items HICP",
