@@ -89,7 +89,7 @@ hipc %>%
   geom_line(linewidth = 0.2) +
   theme(text = element_text(size = 16)) +
   scale_x_date(breaks = "1 year", date_labels = "%Y") +
-  scale_y_continuous(n.breaks = 20) +
+  scale_y_continuous(n.breaks = 10) +
   geom_vline(xintercept = as.Date(c("2019-01-01", "2020-01-01", "2021-01-01", 
                                     "2022-01-01", "2023-01-01", "2024-01-01",
                                     "2025-01-01")), 
@@ -107,7 +107,90 @@ hipc %>%
   geom_segment(aes(x = as.Date("2019-01-01"), y = 16, xend = as.Date("2021-03-01"), yend = 16)) +
   geom_segment(aes(x = as.Date("2021-11-01"), y = 16, xend = as.Date("2024-11-01"), yend = 16)) +
   geom_point(aes(as.Date(a), b), data = seg, size = 3)
-  #---------------------------------------------------
+#-----------------------------------------------------
+cereals <- read_parquet("shiny/agri/cereals.parquet") %>% 
+  filter(state == "Bulgaria", product == "Milling wheat", date >= "2021-12-31")
+cereals <- cereals %>% 
+  summarise(mean_price = mean(price_tonne_bgn), .by = c(date, state, stage_name, product))
+
+an_cer <- tibble(perc = round((392 / 525) * 100, 0))
+seg_cer <- tibble(
+  a = c("2022-01-01", "2024-11-04"),
+  b = c(550, 550))
+
+a <- cereals %>%
+  # filter(coicop == "All-items HICP",
+  #        geo == "Bulgaria",
+  #        between(TIME_PERIOD, as.Date("2019-01-01"), as.Date("2024-11-01"))) %>%
+  # mutate(col = values >= 0, csum = round(cumsum(values), 1)) %>% 
+  # filter(TIME_PERIOD >= "2019-01-01") %>% 
+  ggplot(aes(date, mean_price)) +
+  theme(text = element_text(size = 16)) +
+  scale_x_date(breaks = "1 year", date_labels = "%Y") +
+  scale_y_continuous(n.breaks = 10) +
+  geom_vline(xintercept = as.Date(c("2019-01-01", "2020-01-01", "2021-01-01", 
+                                    "2022-01-01", "2023-01-01", "2024-01-01",
+                                    "2025-01-01")), 
+             color = "black", lty = 2) +
+  scale_color_manual(values = c("red", "black")) +
+  annotate("text", x = as.Date("2023-07-01"), y = 580, label = paste0("-", an_cer$perc, "%"), size = 12, color = "red") +
+  geom_segment(aes(x = as.Date("2022-01-01"), y = 550, xend = as.Date("2024-11-01"), yend = 550), color = "red",
+               linewidth = 0.3, linetype = "dashed") +
+  geom_point(aes(as.Date(a), b), data = seg_cer, size = 3, color = "red") +
+  geom_point(show.legend = F, size = 3) +
+  geom_line(linewidth = 0.2) +
+  labs(x = NULL, y = "Цена (€/тон)", title = "Промяна цената на хлебната пшеница от януари 2022 г. до ноември 2024 г.")
+
+tot_year <- hipc %>%
+  mutate(year = year(TIME_PERIOD)) %>% 
+  filter(coicop == "Bread",
+         geo == "Bulgaria",
+         between(TIME_PERIOD, as.Date("2022-01-01"), as.Date("2024-11-01"))) %>% 
+  summarise(s = round(sum(values), 1), .by = year)
+tot <- hipc %>%
+  filter(coicop == "Bread",
+         geo == "Bulgaria",
+         between(TIME_PERIOD, as.Date("2022-01-01"), as.Date("2024-11-01"))) %>% 
+  summarise(s = round(sum(values), 1))
+seg <- tibble(
+  a = c("2022-01-01", "2024-11-01"),
+  b = c(12.5, 12.5))
+
+b <- hipc %>%
+  filter(coicop == "Bread",
+         geo == "Bulgaria",
+         between(TIME_PERIOD, as.Date("2022-01-01"), as.Date("2025-01-01"))) %>%
+  mutate(col = values >= 0, csum = round(cumsum(values), 1)) %>% 
+  #filter(TIME_PERIOD >= "2022-01-01") %>% 
+  ggplot(aes(TIME_PERIOD, csum)) +
+  geom_vline(xintercept = as.Date(c("2022-06-01")), 
+             color = "red", lty = 1, linewidth = 1) +
+  geom_point(aes(), show.legend = F, size = 3) +
+  geom_line(linewidth = 0.2) +
+  theme(text = element_text(size = 16)) +
+  scale_x_date(breaks = "1 year", date_labels = "%Y") +
+  scale_y_continuous(n.breaks = 10) +
+  geom_vline(xintercept = as.Date(c("2022-01-01", "2023-01-01", "2024-01-01","2025-01-01")), 
+             color = "black", lty = 2) +
+  scale_color_manual(values = c("red", "black")) +
+  labs(x = NULL, y = "%", 
+       title = "Промяна цената на хляба от януари 2022 г. до ноември 2024 г.") +
+  # annotate("text", x = as.Date("2019-07-01"), y = 5, label = paste0(tot_year$s[1], "%"), size = 10) +
+  # annotate("text", x = as.Date("2020-07-01"), y = 5, label = paste0(tot_year$s[2], "%"), size = 10) +
+  # annotate("text", x = as.Date("2021-07-01"), y = 8, label = paste0(tot_year$s[3], "%"), size = 10) +
+  # annotate("text", x = as.Date("2022-09-01"), y = 21, label = paste0(tot_year$s[1], "%"), size = 10) +
+  # annotate("text", x = as.Date("2023-07-01"), y = 21, label = paste0(tot_year$s[2], "%"), size = 10) +
+  # annotate("text", x = as.Date("2024-07-01"), y = 21, label = paste0(tot_year$s[3], "%"), size = 10) +
+  annotate("text", x = as.Date("2023-07-01"), y = 14, label = paste0("+", tot$s, "%"), size = 12, color = "red") +
+  annotate("text", x = as.Date("2022-07-01"), y = 8, label = "Тук се променя\nДДС-то от 20 на 0%", hjust = 0, 
+           size = 6, color = "red") +
+  geom_segment(aes(x = as.Date("2022-01-01"), y = 12.5, xend = as.Date("2024-11-01"), yend = 12.5), color = "red",
+               linewidth = 0.3, linetype = "dashed") +
+  #geom_segment(aes(x = as.Date("2022-01-01"), y = 16, xend = as.Date("2024-01-01"), yend = 16)) +
+  geom_point(aes(as.Date(a), b), data = seg, size = 3, color = "red")
+
+a / b
+#---------------------------------------------------
 loc_sex <- read_delim("loc_sex.csv", col_names = F, na = "-") %>% select(-X46)
 
 loc_sex_n <- loc_sex %>%

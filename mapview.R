@@ -21,14 +21,14 @@ sett <- st_read("data/settlements.geojson")
 ekatte <- fromJSON("data/ek_atte.json") %>%
   select(1:18) %>% drop_na(ekatte)
 
-elev <- ekatte %>% select(ekatte, altitude)
+elev <- ekatte %>% select(ekatte, text)
 sett_elev <- sett %>% left_join(elev, by = "ekatte")
 
 colors <- c('#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#990000')
 
 sett_elev %>% 
-  mapview(color = "blue", zcol = "altitude",
-                    label = sett_elev$altitude, lwd = 1,
+  mapview(color = "blue", zcol = "text",
+                    label = sett_elev$text, lwd = 1,
                     legend = F, col.regions = colors, 
                     alpha.regions = 0.5)
 
