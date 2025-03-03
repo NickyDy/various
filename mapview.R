@@ -7,12 +7,14 @@ library(jsonlite)
 mapviewOptions(basemaps = c("OpenStreetMap"), fgb = F)
 #"Esri.WorldImagery", "OpenTopoMap"
 
-df <- tibble(address = c("Ямбол", "Бургас")) %>% geocode(address, method = "osm")
+df <- tibble(address = c("Ямбол", "Бургас")) %>% 
+  geocode(address, method = "osm")
 map <- st_read("data/obsh_map.gpkg")
 zt <- st_read("data/zt.gpkg")
 nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
-map_places <- read_csv("data/map_places.csv") %>% st_as_sf(coords = c("long", "lat"), crs = c(4326))
+map_places <- read_csv("data/map_places.csv") %>% 
+  st_as_sf(coords = c("long", "lat"), crs = c(4326))
 sof_sam <- st_read("sof_samokov.kmz")
 
 oblasti <- st_read("data/oblasti.geojson")
@@ -47,7 +49,7 @@ map %>%
   #filter(str_detect(obshtina_bg, "^В")) %>% 
   mapview(color = "blue", zcol = "perc", legend = T)
 
-zt %>% 
+zt %>%
   mapview(color = "blue", zcol = "name", col.regions = c("red", "blue", "green", "lightblue", "orange"),
           legend = F)
 nh %>% 

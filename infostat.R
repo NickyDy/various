@@ -1,5 +1,4 @@
 library(tidyverse)
-library(arrow)
 library(sf)
 library(patchwork)
 options(scipen = 100)
@@ -34,81 +33,202 @@ colors <- c("Мъже" = "#F8766D", "Жени" = "#00BFC4", "Градове" = "
 glimpse(loc_sex_n)
 loc_sex %>% map_dfr(~ sum(is.na(.)))
 #-----------------------------------
-agro <- read_delim("data/prices_agro.csv", na = "-")
+mvr <- read_csv("order_safety.csv")
+fatm <- read_csv("defence.csv")
+env <- read_csv("env.csv")
 
-agro %>% count(product) %>% view
+mvr %>% 
+  filter(TIME_PERIOD == "2022", !str_detect(geo, "^Euro")) %>%
+  mutate(col = if_else(geo == "Bulgaria", '1', "0"),
+         geo = fct_reorder(geo, OBS_VALUE)) %>% 
+  ggplot(aes(OBS_VALUE, geo, fill = col)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = paste0(OBS_VALUE, "%")), hjust = -0.05, size = 5) +
+  scale_fill_manual(values = c("#00BFC4", "#556BB4")) +
+  labs(y = NULL, x = "Процент от БВП", title = "Разходи за милиционерщина за 2022 г.") +
+  theme(text = element_text(size = 20))
 
-agro %>% 
-  pivot_longer(-c(1:2)) %>%
-  filter(product == "11 Семена от слънчоглед") %>% 
-  ggplot(aes(name, value)) +
-  geom_col()
+fatm %>% 
+  filter(TIME_PERIOD == "2022", !str_detect(geo, "^Euro")) %>%
+  mutate(col = if_else(geo == "Bulgaria", '1', "0"),
+         geo = fct_reorder(geo, OBS_VALUE)) %>% 
+  ggplot(aes(OBS_VALUE, geo, fill = col)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = paste0(OBS_VALUE, "%")), hjust = -0.05, size = 5) +
+  scale_fill_manual(values = c("#00BFC4", "#7D7453")) +
+  labs(y = NULL, x = "Процент от БВП", title = "Разходи за фатмащина за 2022 г.") +
+  theme(text = element_text(size = 20))
+
+env %>% 
+  filter(TIME_PERIOD == "2022", !str_detect(geo, "^Euro")) %>%
+  mutate(col = if_else(geo == "Bulgaria", '1', "0"),
+         geo = fct_reorder(geo, OBS_VALUE)) %>% 
+  ggplot(aes(OBS_VALUE, geo, fill = col)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = paste0(OBS_VALUE, "%")), hjust = -0.05, size = 5) +
+  scale_fill_manual(values = c("#00BFC4", "#00A000")) +
+  labs(y = NULL, x = "Процент от БВП", title = "Разходи за опазване на околната среда за 2022 г.") +
+  theme(text = element_text(size = 20))
 #-----------------------------------------------------------
-hipc <- read_parquet("shiny/eurostat/prc_hicp_mmor.parquet")
+hipc <- read_rds("shiny/eurostat/prc_hicp_mmor.rds")
+ipcmk <- read_csv2("ipcmk.csv", col_names = F)
 
-# hipc_n <- hipc %>% 
-#   slice(-c(1:1)) %>% 
-#   rownames_to_column() %>%
-#   pivot_longer(-rowname) %>%
-#   pivot_wider(names_from = rowname, values_from = value) %>%
-#   unite("united", 2:4, sep = "_") %>%
-#   rownames_to_column() %>%
-#   pivot_longer(-rowname) %>%
-#   pivot_wider(names_from = rowname, values_from = value) %>%
-#   select(!name) %>%
-#   slice(-c(1:1)) %>%
-#   mutate(`1` = str_replace(`1`, "__", "pokazatel")) %>%
-#   janitor::row_to_names(row_number = 1) %>%
-#   pivot_longer(2:1642, names_to = "name", values_to = "value") %>% 
-#   separate(name, c("index", "year", "month"), sep = "_") %>%
-#   mutate(value = parse_number(value)) %>% drop_na(value)
+ipcmk_n <- ipcmk_n %>% 
+  mutate(month_n = case_when(
+    month == "януари" ~ "1",
+    month == "февруари" ~ "2",
+    month == "март" ~ "3",
+    month == "април" ~ "4",
+    month == "май" ~ "5",
+    month == "юни" ~ "6",
+    month == "юли" ~ "7",
+    month == "август" ~ "8",
+    month == "септември" ~ "9",
+    month == "октомври" ~ "10",
+    month == "ноември" ~ "11",
+    month == "декември" ~ "12"),
+    day = 1, year = as.numeric(year), month_n = as.numeric(month_n),
+    date = make_date(year, month_n, day))
 
-tot_year <- hipc %>%
+ipcmk_n %>% 
+  filter(pokazatel == "Общ ИЦМК", date >= "2024-01-01") %>%
+  ggplot(aes(date, cumsum(value))) +
+  geom_line() +
+  geom_point() +
+  geom_text(aes(label = value), vjust = -0.5)
+
+ipcmk_n <- ipcmk %>%
+  slice(-c(1:1)) %>%
+  rownames_to_column() %>%
+  pivot_longer(-rowname) %>%
+  pivot_wider(names_from = rowname, values_from = value) %>%
+  unite("united", 2:4, sep = "_") %>%
+  rownames_to_column() %>%
+  pivot_longer(-rowname) %>%
+  pivot_wider(names_from = rowname, values_from = value) %>%
+  select(!name) %>%
+  slice(-c(1:1)) %>%
+  mutate(`1` = str_replace(`1`, "NA_NA_NA", "pokazatel")) %>%
+  janitor::row_to_names(row_number = 1) %>%
+  pivot_longer(2:290, names_to = "name", values_to = "value") %>%
+  separate(name, c("index", "year", "month"), sep = "_") %>%
+  mutate(value = parse_number(value)) %>% drop_na(value)
+
+plot_inf("All-items HICP", "Estonia")
+
+plot_inf <- function(name_coicop, country){
+  
+time <- hipc %>%
+  filter(coicop == name_coicop,
+         geo == country,
+         TIME_PERIOD >= "2000-01-01")
+
+pos <- time %>%
+  mutate(year = year(TIME_PERIOD), 
+         csum = round(cumsum(values), 1)) %>%
+  summarise(max = max(csum), .by = year) %>% 
+  filter(year != 2025)
+
+level <- max(pos$max) / 2
+
+tot_year <- time %>% 
   mutate(year = year(TIME_PERIOD)) %>% 
-  filter(coicop == "All-items HICP",
-         geo == "Bulgaria",
-         TIME_PERIOD >= "2019-01-01") %>% 
-  summarise(s = round(sum(values), 1), .by = year)
-tot <- hipc %>%
-  filter(coicop == "All-items HICP",
-         geo == "Bulgaria",
-         TIME_PERIOD >= "2019-01-01") %>% 
-  summarise(s = round(sum(values), 1))
-seg <- tibble(
-  a = c("2019-01-01", "2024-12-01"),
-  b = c(16, 16))
+  summarise(s = round(sum(values), 1), .by = year) %>% 
+  filter(year != 2025)
 
-hipc %>%
-  filter(coicop == "All-items HICP",
-         geo == "Bulgaria",
-         TIME_PERIOD >= "2019-01-01") %>%
+tot <- time %>% 
+  summarise(s = round(sum(values), 0))
+
+seg <- tibble(
+  a = c(first(time$TIME_PERIOD), last(time$TIME_PERIOD)),
+  b = c(level, level))
+
+date <- time %>%
+  mutate(month = str_detect(TIME_PERIOD, "^\\d{4}-01")) %>%
+  filter(month == "TRUE") %>% pull(TIME_PERIOD)
+
+text_data <- time %>% 
+  filter(str_detect(TIME_PERIOD, "^\\d{4}-07-\\d{2}")) %>% 
+  select(TIME_PERIOD) %>% 
+  mutate(pos_max = pos$max, tot_year_s = tot_year$s)
+
+euro_zone <- time %>% 
+  group_by(geo) %>% 
+  mutate(euro = case_when(
+    geo == "Greece" ~ as.Date("2001-01-01"),
+    geo == "Slovenia" ~ as.Date("2007-01-01"),
+    geo == "Cyprus" ~ as.Date("2008-01-01"),
+    geo == "Malta" ~ as.Date("2008-01-01"),
+    geo == "Slovakia" ~ as.Date("2009-01-01"),
+    geo == "Estonia" ~ as.Date("2011-01-01"),
+    geo == "Latvia" ~ as.Date("2014-01-01"),
+    geo == "Lithuania" ~ as.Date("2015-01-01"),
+    geo == "Croatia" ~ as.Date("2023-01-01"),),
+    label = "Влизане в\nЕврозоната", x = euro, y = level * 2) %>% 
+  distinct(euro, label, x, y)
+
+time %>%
   mutate(col = values >= 0, csum = round(cumsum(values), 1)) %>%
-  filter(TIME_PERIOD >= "2019-01-01") %>% view
   ggplot(aes(TIME_PERIOD, csum)) +
-  geom_point(aes(color = col), show.legend = F, size = 3) +
+  geom_text(data = text_data, aes(label = paste0(tot_year_s, "%"), x = TIME_PERIOD, y = pos_max + 2), size = 5) +
+  annotate("text", x = time$TIME_PERIOD[7], y = level, 
+           label = paste0(tot$s, "%"), size = 6, color = "red", fontface = "bold") +
+  geom_segment(x = time$TIME_PERIOD[1], xend = time$TIME_PERIOD[2], y = level, yend = level, linewidth = 0.2) +
+  geom_segment(x = time$TIME_PERIOD[12], xend = last(time$TIME_PERIOD), y = level, yend = level, linewidth = 0.2) +
+  geom_point(aes(as.Date(a), b), data = seg, size = 2) +
+  geom_point(aes(color = col), show.legend = F, size = 1) +
   geom_line(linewidth = 0.2) +
   theme(text = element_text(size = 16)) +
-  scale_x_date(breaks = "1 year", date_labels = "%Y") +
+  scale_x_date(breaks = "1 year", date_labels = "%Y", expand = c(0.02, 0.02)) +
   scale_y_continuous(n.breaks = 10) +
-  geom_vline(xintercept = as.Date(c("2019-01-01", "2020-01-01", "2021-01-01", 
-                                    "2022-01-01", "2023-01-01", "2024-01-01",
-                                    "2025-01-01")), 
-             color = "black", lty = 2) +
+  geom_vline(xintercept = date, color = "black", lty = 2) +
+  geom_vline(data = euro_zone, aes(xintercept = euro), color = "red", lty = 1, linewidth = 1) +
+  geom_text(data = euro_zone, aes(label = label, x = x, y = y), 
+            size = 5, color = "red", hjust = 0 - 0.1, fontface = "bold") +
   scale_color_manual(values = c("red", "black")) +
   labs(x = NULL, y = "Инфлация (%)", 
-       title = "Натрупана обща инфлация (Общ ХИПЦ) - по месеци, по години и общо за целия период - януари (2019)-ноември (2024)") +
-  annotate("text", x = as.Date("2019-07-01"), y = 5, label = paste0(tot_year$s[1], "%"), size = 10) +
-  annotate("text", x = as.Date("2020-07-01"), y = 5, label = paste0(tot_year$s[2], "%"), size = 10) +
-  annotate("text", x = as.Date("2021-07-01"), y = 8, label = paste0(tot_year$s[3], "%"), size = 10) +
-  annotate("text", x = as.Date("2022-07-01"), y = 22, label = paste0(tot_year$s[4], "%"), size = 10) +
-  annotate("text", x = as.Date("2023-07-01"), y = 29, label = paste0(tot_year$s[5], "%"), size = 10) +
-  annotate("text", x = as.Date("2024-07-01"), y = 31, label = paste0(tot_year$s[6], "%"), size = 10) +
-  annotate("text", x = as.Date("2021-07-01"), y = 16, label = paste0(tot$s, "%"), size = 15) +
-  geom_segment(aes(x = as.Date("2019-01-01"), y = 16, xend = as.Date("2021-03-01"), yend = 16)) +
-  geom_segment(aes(x = as.Date("2021-11-01"), y = 16, xend = as.Date("2024-12-01"), yend = 16)) +
-  geom_point(aes(as.Date(a), b), data = seg, size = 3)
+       title = name_coicop)
+}
+
+hipc %>% count(coicop) %>% view
+
+tot <- hipc %>%
+  filter(coicop == "All-items HICP",
+         geo %in% c("Bulgaria", "Croatia"),
+         TIME_PERIOD >= "2022-12-31") %>% 
+  summarise(s = round(sum(values), 1), .by = geo)
+
+v_line <- tibble(
+  geo = c("Bulgaria", "Croatia"),
+  int = as.Date(c( NA, "2023-01-01"))
+)
+note <- tibble(
+  geo = c("Bulgaria", "Croatia"),
+  coord = as.Date(c( NA, "2023-01-01")),
+  text = c( NA, "Тук Хърватска\nвъвежда еврото")
+)
+  
+hipc %>%
+  filter(coicop == "All-items HICP",
+         geo %in% c("Bulgaria", "Croatia"),
+         TIME_PERIOD >= "2022-12-31") %>%
+  mutate(col = values >= 0, csum = round(cumsum(values), 1)) %>%
+  ggplot(aes(TIME_PERIOD, csum)) +
+  geom_vline(data = v_line, aes(xintercept = int), linetype = 1, linewidth = 1, color = "red") +
+  geom_point(aes(color = col), show.legend = F, size = 3) +
+  geom_line(linewidth = 0.2) +
+  theme(text = element_text(size = 20)) +
+  scale_x_date(breaks = "3 months", date_labels = "%b-%Y") +
+  scale_color_manual(values = c("red", "black")) +
+  geom_text(aes(label = csum), vjust = -0.5) +
+  geom_text(data = note, aes(label = text), inherit.aes = F, x = as.Date("2023-01-10"),
+            y = 16, size = 8, color = "red", hjust = 0) +
+  geom_text(data = tot, aes(label = paste0(s, "%")), inherit.aes = F, color = "red", fontface = "bold",
+            x = as.Date(c("2024-03-01", "2024-03-01")), y = c(6.3, 15.5), size = 14) +
+  labs(x = NULL, y = "Натрупана инфлация") +
+  facet_wrap(vars(geo), scales = "free_y")
 #-----------------------------------------------------
-cereals <- read_parquet("shiny/agri/cereals.parquet") %>% 
+cereals <- read_rds("shiny/agri/cereals.rds") %>% 
   filter(state == "Bulgaria", product == "Milling wheat", date >= "2021-12-31")
 cereals <- cereals %>% 
   summarise(mean_price = mean(price_tonne_bgn), .by = c(date, state, stage_name, product))
@@ -215,7 +335,7 @@ loc_sex_n <- loc_sex %>%
          !str_detect(location, "^[:upper:]{3}\\d{2}")) %>% 
   mutate(pop = parse_number(pop)) %>% 
   select(oblast, obshtina, everything())
-write_parquet(loc_sex_n, "shiny/demography/loc_sex.parquet")
+write_rds(loc_sex_n, "shiny/demography/loc_sex.rds")
 
 loc_sex_n %>% 
   filter(year == 2023) %>% 
@@ -295,7 +415,7 @@ obl_age_sex_n <- obl_age_sex %>%
   mutate(pop = parse_number(pop)) %>% 
   mutate(age = str_remove_all(age, " "), age = fct_inorder(age)) %>% drop_na()
 obl_age_sex_n %>% count(oblast) %>% view
-write_parquet(obl_age_sex_n, "shiny/demography/obl_age_sex.parquet")
+write_rds(obl_age_sex_n, "shiny/demography/obl_age_sex.rds")
 
 obl_age_sex_n %>% 
   mutate(age = str_remove_all(age, " "), age = fct_inorder(age)) %>% 
@@ -390,7 +510,7 @@ labor_sett_sex_n <- labor_sett_sex %>%
                              "Над трудоспособна възраст")) %>% 
   drop_na()
 labor_sett_sex_n %>% count(obsh) %>% view
-write_parquet(labor_sett_sex_n, "shiny/demography/labor_sett_sex.parquet")
+write_rds(labor_sett_sex_n, "shiny/demography/labor_sett_sex.rds")
 
 labor_sett_sex_n %>% 
   filter(obsh == "Бургас", year == 2022) %>% 
@@ -616,7 +736,7 @@ birth_rate_n <- birth_rate %>%
   separate(name, c("year", "coef"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
 obl_birth_n %>% count(obsh) %>% view
-write_parquet(birth_rate_n, "shiny/demography//birth_rate.parquet")
+write_rds(birth_rate_n, "shiny/demography//birth_rate.rds")
 
 birth_rate_n %>% 
   filter(coef == "Средна възраст на майката при раждане на дете (години)", year == 2023) %>% 
@@ -650,7 +770,7 @@ mortality_n <- mortality %>%
   separate(name, c("coef", "sett", "sex"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
 obl_birth_n %>% count(obsh) %>% view
-write_parquet(mortality_n, "shiny/demography//mortality.parquet")
+write_rds(mortality_n, "shiny/demography//mortality.rds")
 
 mortality_n %>% 
   filter(coef == "Коефициент на обща смъртност", year == 2022) %>% 
@@ -685,7 +805,7 @@ brakove_n <- brakove %>%
   separate(name, c("year", "sett"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
 brakove_n %>% count(obsh) %>% view
-write_parquet(brakove_n, "shiny/demography//brakove.parquet")
+write_rds(brakove_n, "shiny/demography//brakove.rds")
 
 brakove_n %>% 
   filter(obshtina == "Бяла") %>% 
@@ -719,7 +839,7 @@ razvodi_n <- razvodi %>%
   separate(name, c("year", "sett"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
 razvodi_n %>% count(obsh) %>% view
-write_parquet(razvodi_n, "shiny/demography/razvodi.parquet")
+write_rds(razvodi_n, "shiny/demography/razvodi.rds")
 
 razvodi_n %>% 
   filter(obshtina == "Благоевград") %>% 
@@ -755,7 +875,7 @@ int_migration_n <- int_migration %>%
   mutate(migrated = fct_relevel(migrated, "Заселени", "Изселени", "Механичен прираст"), 
          pop = parse_number(pop)) %>% drop_na()
 int_migration_n %>% count(obsh) %>% view
-write_parquet(int_migration_n, "shiny/demography//int_migration.parquet")
+write_rds(int_migration_n, "shiny/demography//int_migration.rds")
 
 int_migration_n %>% 
   filter(obshtina == "Елхово", sett == "В селата") %>% 
@@ -790,7 +910,7 @@ ext_migration_n <- ext_migration %>%
          pop = parse_number(pop),
          age = str_remove_all(age, "\\s")) %>% drop_na()
 ext_migration_n %>% count(obsh) %>% view
-write_parquet(ext_migration_n, "shiny/demography//ext_migration.parquet")
+write_rds(ext_migration_n, "shiny/demography//ext_migration.rds")
 
 ext_migration_n %>% 
   filter(age == "20-24") %>% 
@@ -823,7 +943,7 @@ school_n <- school %>%
   separate(name, c("year", "education"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
 school_n %>% count(location) %>% view
-write_parquet(school_n, "shiny/demography//school.parquet")
+write_rds(school_n, "shiny/demography//school.rds")
 
 school_n %>% 
   filter(obshtina == "SOF46 Столична") %>% 
@@ -857,7 +977,7 @@ university_n <- university %>%
   mutate(pop = parse_number(pop),
          grade = fct_relevel(grade, "Магистър", "Бакалавър", "Професионален бакалавър")) %>% drop_na()
 school_n %>% count(location) %>% view
-write_parquet(university_n, "shiny/demography//university.parquet")
+write_rds(university_n, "shiny/demography//university.rds")
 
 university_n %>% 
   filter(oblast == "Ямбол") %>% 
@@ -911,7 +1031,7 @@ health2_n <- health2 %>%
 
 health_n <- bind_rows(health1_n, health2_n)
 health_n %>% count(zabolqvane) %>% view
-write_parquet(health_n, "shiny/demography//health.parquet")
+write_rds(health_n, "shiny/demography//health.rds")
 
 health_n %>% 
   filter(oblast == "София", zabolqvane == "Злокачествени новообразувания (C00-C97)") %>% 
@@ -947,7 +1067,7 @@ kinder_gardens_n <- kinder_gardens %>%
   mutate(pop = parse_number(pop),
          sex = fct_recode(sex, "Момчета" = "Мъже", "Момичета" = "Жени")) %>% drop_na()
 school_n %>% count(location) %>% view
-write_parquet(kinder_gardens_n, "shiny/demography//kinder_gardens.parquet")
+write_rds(kinder_gardens_n, "shiny/demography//kinder_gardens.rds")
 
 kinder_gardens_n %>% 
   filter(obshtina == "Бойница") %>% 
@@ -982,7 +1102,7 @@ poverty_n <- poverty %>%
   separate(name, c("perc", "year"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
 school_n %>% count(location) %>% view
-write_parquet(poverty_n, "shiny/demography//poverty.parquet")
+write_rds(poverty_n, "shiny/demography//poverty.rds")
 
 poverty_n %>% 
   #filter(obshtina == "Бойница") %>% 
@@ -1021,7 +1141,7 @@ potreblenie_n <- potreblenie %>%
   # separate(name, c("perc", "year"), sep = "_") %>%
   mutate(value = parse_number(value)) %>% drop_na()
 school_n %>% count(location) %>% view
-write_parquet(potreblenie_n, "shiny/demography/potreblenie.parquet")
+write_rds(potreblenie_n, "shiny/demography/potreblenie.rds")
 
 potreblenie_n %>% 
   filter(product == "Хляб и тестени изделия - кг", oblast == "Ямбол") %>% 
@@ -1055,7 +1175,7 @@ prestupnost_n <- prestupnost %>%
          age = str_remove_all(age, " "),
          age = str_replace(age, "60иповече", "60 и повече")) %>% drop_na()
 school_n %>% count(location) %>% view
-write_parquet(prestupnost_n, "shiny/demography/prestupnost.parquet")
+write_rds(prestupnost_n, "shiny/demography/prestupnost.rds")
 
 prestupnost_n %>% 
   filter(oblast == "Ямбол") %>% 

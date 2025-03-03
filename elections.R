@@ -1,5 +1,4 @@
 library(tidyverse)
-library(arrow)
 library(scales)
 #library(tidytext)
 #library(sf)
@@ -7,15 +6,16 @@ library(scales)
 #library(readxl)
 glimpse(oct_2024)
 
-votes <- read_parquet("shiny/elections/votes.parquet")
-mand <- read_parquet("shiny/elections/mand.parquet")
-activity <- read_parquet("shiny/elections/election_activity.parquet")
+votes <- read_rds("shiny/elections/votes.rds")
+mand <- read_rds("shiny/elections/mand.rds")
+activity <- read_rds("shiny/elections/election_activity.rds")
 obsh_map <- st_read("data/obsh_map.gpkg")
 obl_map <- st_read("data/obl_map.gpkg")
 bg_map <- gadm("BGR", level = 0, path = tempdir())
 
-write_parquet(votes, "data/votes.parquet")
-write_parquet(votes, "shiny/elections/votes.parquet")
+write_rds(votes, "shiny/elections/votes.rds")
+write_rds(mand, "shiny/elections/mand.rds")
+write_rds(activity, "shiny/elections/activity.rds")
 write_csv(oct_2024_new, "data/oct_2024.csv")
 
 glimpse(df)
@@ -86,6 +86,8 @@ votes %>%
        caption = "Бележка: Оцветени са само партиите и коалициите влизали/щи в Парламента, останалите са в сиво.
        Източник на данните: ЦИК.") +
   facet_wrap(~ vote_date, nrow = 1)
+
+ggsave("312500046.png", width = 18, height = 10)
 
 votes %>%
   #filter(oblast == "Пловдив град") %>% 
@@ -287,7 +289,7 @@ df_2024 <- left_join(jan, feb, by = c("id", "oblast", "obshtina", "sett", "addre
   left_join(., apr, by = c("id", "oblast", "obshtina", "sett", "address")) %>% 
   left_join(., may, by = c("id", "oblast", "obshtina", "sett", "address")) %>% 
   left_join(., june, by = c("id", "oblast", "obshtina", "sett", "address"))
-write_parquet(df_2024, "shiny/elections/df_2024.parquet")
+write_rds(df_2024, "shiny/elections/df_2024.rds")
 
 df_2024 %>% 
   filter(obshtina == "СТОЛИЧНА") %>% 
@@ -354,7 +356,7 @@ act <- tibble(
                                       "Юни 2024",
                                       "Октомври 2024")))
 
-write_parquet(act, "shiny/elections/election_activity.parquet")
+write_rds(act, "shiny/elections/election_activity.rds")
 
 act %>% 
   mutate(election = fct_reorder(election, activity)) %>% 
@@ -441,7 +443,7 @@ mand <- tibble(
   mutate(year = paste0("(", year, ")")) %>% 
   unite("ns_year", 1:2, sep = " ")
 
-write_parquet(mand, "shiny/elections/mand.parquet")
+write_rds(mand, "shiny/elections/mand.rds")
 
 colors_mand <- c(
   "ПП" = "yellow",
@@ -505,18 +507,18 @@ mand %>%
 library(fs)
 library(readxl)
 
-oct_2024_pref <- read_parquet("data/pref/oct_2024_pref.parquet")
-june_2024_pref <- read_parquet("data/pref/june_2024_pref.parquet")
-apr_2023_pref <- read_parquet("data/pref/apr_2023_pref.parquet")
-oct_2022_pref <- read_parquet("data/pref/oct_2022_pref.parquet")
-nov_2021_pref <- read_parquet("data/pref/nov_2021_pref.parquet")
-jul_2021_pref <- read_parquet("data/pref/jul_2021_pref.parquet")
-apr_2021_pref <- read_parquet("data/pref/apr_2021_pref.parquet")
+oct_2024_pref <- read_rds("data/pref/oct_2024_pref.rds")
+june_2024_pref <- read_rds("data/pref/june_2024_pref.rds")
+apr_2023_pref <- read_rds("data/pref/apr_2023_pref.rds")
+oct_2022_pref <- read_rds("data/pref/oct_2022_pref.rds")
+nov_2021_pref <- read_rds("data/pref/nov_2021_pref.rds")
+jul_2021_pref <- read_rds("data/pref/jul_2021_pref.rds")
+apr_2021_pref <- read_rds("data/pref/apr_2021_pref.rds")
 
 apr_2021_pref %>% map_dfr(sum(is.na(.)))
 apr_2021_pref %>% map_dfr(sum(. == 0))
 
-#write_parquet(apr_2023_pref_new, "data/pref/apr_2023_pref.parquet")
+#write_rds(apr_2023_pref_new, "data/pref/apr_2023_pref.rds")
 
 unzip(zipfile = "~/Downloads/spreadsheet.zip", exdir = "~/Downloads/spreadsheet")
 files <- dir_ls("~/Downloads/spreadsheet", glob = "*.xlsx")

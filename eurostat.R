@@ -1,7 +1,7 @@
 library(tidyverse)
 library(eurostat)
-library(arrow)
-#library(tidytext)
+library(tidytext)
+#library(jsonlite)
 #library(scales)
 # library(rnaturalearth)
 # library(rnaturalearthdata)
@@ -19,12 +19,31 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
   mutate(name = fct_recode(name, "Czechia" = "Czech Rep.", "North Macedonia" = "Macedonia",
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
 #-------------------------------------------------------------------------
-write_parquet(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.parquet")
-write_parquet(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.parquet")
+write_rds(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.rds")
+
+write_rds(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.rds")
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
-prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", time_format = "date") %>%
-   mutate_if(is_character, as_factor)
+prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", 
+                              time_format = "date", stringsAsFactors = T)
+
+env_bio4 %>% 
+  filter(unit == "Percentage", TIME_PERIOD == "2021-01-01", values > 0) %>% 
+  mutate(col = geo, 
+         geo = reorder_within(geo, values, areaprot),
+         areaprot = fct_recode(areaprot, "Сухоземна защитена територия" = "Terrestrial protected area",
+                                "Морска защитена територия" =  "Marine protected area"),
+         col = if_else(col == "Bulgaria", "1", "0")) %>% 
+  ggplot(aes(values, geo, fill = col)) +
+  geom_col(show.legend = F) +
+  scale_y_reordered() +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.1))) +
+  scale_fill_manual(values = c("gray", "red")) +
+  geom_text(aes(label = values), size = 5, hjust = -0.2) +
+  labs(y = NULL, x = "Процент", 
+       title = "Дял на защитените територии от общата територия/акватория на страната към януари 2021 г.") +
+  theme(text = element_text(size = 18)) +
+  facet_wrap(vars(areaprot), scales = "free_y")
 
 data <- hlth_cd_iap %>% 
   filter(indic_he == "Premature death", unit == "Rate",
@@ -76,8 +95,7 @@ demo_find %>%
   filter(indic_de == "Proportion of live births outside marriage",
          TIME_PERIOD == c("2022-01-01", "2007-01-01"),
          !str_detect(geo, "Germany including former GDR"),
-         !str_detect(geo, "^Euro")
-         ) %>% view
+         !str_detect(geo, "^Euro")) %>%
   mutate(col = geo, geo = reorder_within(geo, values, TIME_PERIOD),
          geo = fct_recode(geo, "Turkey" = "Türkiye"),
          TIME_PERIOD = fct_recode(as.character(TIME_PERIOD), "2006" = "2007-01-01", "2021" = "2022-01-01"),
@@ -613,6 +631,8 @@ p1 + p2
 #-----------------------------------
 earn_mw_cur <- get_eurostat("earn_mw_cur", type = "label", time_format = "date") %>%
   mutate_if(is_character, as_factor)
+nrg_pc_204 <- get_eurostat("nrg_pc_204", type = "label", time_format = "date") %>%
+  mutate_if(is_character, as_factor)
 
 earn_mw_cur %>%
   filter(
@@ -622,7 +642,7 @@ earn_mw_cur %>%
       "European Union (EU6-1958, EU9-1973, EU10-1981, EU12-1986, EU15-1995, EU25-2004, EU27-2007, EU28-2013, EU27-2020)",
       "Euro area - 18 countries (2014)", "Euro area - 19 countries  (from 2015)",
       "European Union - 27 countries (from 2020)", "European Union - 28 countries (2013-2020)"),
-    TIME_PERIOD == "2024-07-01") %>%
+    TIME_PERIOD == "2025-01-01") %>%
   mutate(geo = fct_reorder(geo, values), col = case_when(geo == "Bulgaria" ~ "0", TRUE ~ "1")) %>%
   mutate(geo = fct_recode(geo, "Germany" = "Germany (until 1990 former territory of the FRG)")) %>% 
   ggplot(aes(values, geo, fill = col)) +
@@ -630,13 +650,30 @@ earn_mw_cur %>%
   geom_text(aes(label = values), hjust = -0.2, size = 5, color = "black") +
   scale_x_continuous(expand = expansion(mult = c(0.01, 0.13))) +
   theme(text = element_text(size = 16)) +
-  labs(x = "Минимална месечна заплата в евро към 01.01.2023 г.", y = NULL)
+  labs(x = "Минимална месечна заплата в евро към 01.01.2025 г.", y = NULL)
 
-nrg_pc_204 <- get_eurostat("nrg_pc_204", type = "label", time_format = "date") %>%
-  mutate_if(is_character, as_factor)
+m_wage <- earn_mw_cur %>% 
+  filter(currency == "Euro", TIME_PERIOD == "2025-01-01") %>% 
+  select(geo, wage = values)
 
-joined <- elec %>% left_join(min_wage, by = "geo") %>% 
+elec <- nrg_pc_204 %>% 
+  filter(TIME_PERIOD == "2024-01-01", nrg_cons == "Consumption of kWh - all bands",
+         tax == "All taxes and levies included", currency == "Euro") %>% 
+  select(geo, electricity = values)
+
+joined <- elec %>% left_join(m_wage, by = "geo") %>% 
   mutate(ration = abs(wage / electricity))
+
+joined %>%
+  filter(!str_detect(geo, "Euro"), ration > 0) %>% 
+  mutate(geo = fct_reorder(geo, ration), col = case_when(geo == "Bulgaria" ~ "0", TRUE ~ "1")) %>%
+  select(geo, col, ration) %>% 
+  ggplot(aes(ration, geo, fill = col)) +
+  geom_col(show.legend = F) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.15))) +
+  geom_text(aes(label = paste0(round(ration, 0))), hjust = -0.02, size = 5, color = "black") +
+  theme(text = element_text(size = 16)) +
+  labs(x = "", y = NULL)
 
 nrg_pc_204 %>%
   filter(

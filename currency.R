@@ -72,7 +72,7 @@ df <- bind_rows(xe,
                 #dbank, 
                 tokuda, 
                 tbi) %>% 
-  mutate(amount = 1) %>% 
+  mutate(amount = 2556.46) %>% 
   select(date, bank, cur, buying, selling, amount) %>% 
   mutate(Купува = buying * amount, Продава = selling * amount) %>%
   group_by(cur) %>% 
