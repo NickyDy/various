@@ -1,6 +1,5 @@
 library(tidyverse)
 library(scales)
-library(arrow)
 
 diss <- read_csv("data/diss.csv")
 votes <- read_parquet("shiny/elections/votes.parquet")

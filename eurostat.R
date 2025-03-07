@@ -19,12 +19,12 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
   mutate(name = fct_recode(name, "Czechia" = "Czech Rep.", "North Macedonia" = "Macedonia",
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
 #-------------------------------------------------------------------------
-write_rds(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.rds")
+write_rds(tec00011, "shiny/eurostat/tec00011.rds")
 
 write_rds(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.rds")
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
-prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", 
+tec00011 <- get_eurostat("tec00011", type = "label", 
                               time_format = "date", stringsAsFactors = T)
 
 env_bio4 %>% 

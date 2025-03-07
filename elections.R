@@ -8,7 +8,7 @@ glimpse(oct_2024)
 
 votes <- read_rds("shiny/elections/votes.rds")
 mand <- read_rds("shiny/elections/mand.rds")
-activity <- read_rds("shiny/elections/election_activity.rds")
+activity <- read_rds("shiny/elections/activity.rds")
 obsh_map <- st_read("data/obsh_map.gpkg")
 obl_map <- st_read("data/obl_map.gpkg")
 bg_map <- gadm("BGR", level = 0, path = tempdir())
