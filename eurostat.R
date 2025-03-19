@@ -24,8 +24,22 @@ write_rds(tec00011, "shiny/eurostat/tec00011.rds")
 write_rds(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.rds")
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
-tec00011 <- get_eurostat("tec00011", type = "label", 
+demo_fmonth <- get_eurostat("demo_fmonth", type = "label", 
                               time_format = "date", stringsAsFactors = T)
+
+eq_fer05 %>% 
+  filter(indic_de == "Live births - total", geo == "Bulgaria") %>% 
+  ggplot(aes(TIME_PERIOD, values)) +
+  geom_point() +
+  geom_path()
+
+demo_fmonth %>% 
+  filter(geo == "Bulgaria", !month %in% c("Total", "Unknown")) %>% 
+  ggplot(aes(TIME_PERIOD, values)) +
+  geom_point() +
+  geom_path() +
+  scale_x_date(date_breaks = "3 years", date_labels = "%Y") +
+  facet_wrap(vars(month))
 
 env_bio4 %>% 
   filter(unit == "Percentage", TIME_PERIOD == "2021-01-01", values > 0) %>% 

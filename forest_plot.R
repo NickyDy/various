@@ -1,5 +1,4 @@
 library(tidyverse)
-library(gt)
 library(patchwork)
 ## ---------------------------
 res_log <- read_csv("https://raw.githubusercontent.com/kathoffman/steroids-trial-emulation/main/output/res_log.csv")
