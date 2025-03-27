@@ -13,6 +13,9 @@ toc <- get_eurostat_toc() %>%
 	filter(type %in% c("table", "dataset")) %>% 
 	distinct()
 
+nrg_cb_pem  <- get_eurostat("nrg_cb_pem", type = "label", 
+                            time_format = "date", stringsAsFactors = T)
+
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
   janitor::clean_names() %>% 
   select(name, geometry) %>% 
@@ -22,10 +25,44 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
 write_rds(tec00011, "shiny/eurostat/tec00011.rds")
 
 write_rds(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.rds")
-prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
+write_rds(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.rds")
 
-demo_fmonth <- get_eurostat("demo_fmonth", type = "label", 
-                              time_format = "date", stringsAsFactors = T)
+prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
+prc_hicp_mmor %>% count(TIME_PERIOD) %>% arrange(rev(TIME_PERIOD))
+
+nrg_cb_pem %>%
+  filter(TIME_PERIOD == "2024-12-01", unit == "Percentage",
+         siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
+                     "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
+                     "Wind", "Solar"),
+         #geo %in% c("Norway", "Albania", "Iceland", "Serbia", "Poland", "Kosovo*"),
+         values > 0.01) %>% 
+  mutate(siec = fct_recode(siec, "Въглища" = "Coal and manufactured gases", "Природен газ" = "Natural gas", 
+                           "Ядрена енергия" = "Nuclear fuels and other fuels n.e.c.",
+                           "Нефт" = "Oil and petroleum products (excluding biofuel portion)", 
+                           "Вода" = "Hydro", "Геотермална" = "Geothermal",
+                           "Вятър" =  "Wind","Слънце" = "Solar"),
+         siec = fct_reorder(siec, values)) %>%
+  ggplot(aes(values, siec, fill = siec)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = paste0(round(values, 2), "%")), size = 4, hjust = -0.1) +
+  scale_fill_manual(values = c("Въглища" = "black", "Природен газ" = "lightblue", 
+                               "Ядрена енергия" = "red",
+                               "Нефт" = "brown", 
+                               "Вода" = "blue", "Геотермална" = "gray",
+                               "Вятър" = "green", "Слънце" = "orange")) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.4))) +
+  theme(text = element_text(size = 16), axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(x = NULL, y = NULL) +
+  facet_wrap(vars(geo))
+
+hlth_cd_aro %>% 
+  filter(age == "Total", sex == "Total", resid == "All deaths reported in the country", 
+         TIME_PERIOD == "2022-01-01", geo == "Bulgaria", !icd10 == "Total", values > 500) %>% 
+  mutate(icd10 = fct_reorder(icd10, values)) %>% 
+  ggplot(aes(values, icd10)) +
+  geom_col()
 
 eq_fer05 %>% 
   filter(indic_de == "Live births - total", geo == "Bulgaria") %>% 
