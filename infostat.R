@@ -114,7 +114,7 @@ ipcmk_n <- ipcmk %>%
   separate(name, c("index", "year", "month"), sep = "_") %>%
   mutate(value = parse_number(value)) %>% drop_na(value)
 
-plot_inf("All-items HICP", "Estonia")
+plot_inf("Food", "Bulgaria")
 
 plot_inf <- function(name_coicop, country){
   

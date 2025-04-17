@@ -13,7 +13,7 @@ toc <- get_eurostat_toc() %>%
 	filter(type %in% c("table", "dataset")) %>% 
 	distinct()
 
-nrg_cb_pem  <- get_eurostat("nrg_cb_pem", type = "label", 
+prc_hicp_mmor  <- get_eurostat("prc_hicp_mmor", type = "label", 
                             time_format = "date", stringsAsFactors = T)
 
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
@@ -31,14 +31,15 @@ prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 prc_hicp_mmor %>% count(TIME_PERIOD) %>% arrange(rev(TIME_PERIOD))
 
 nrg_cb_pem %>%
-  filter(TIME_PERIOD == "2024-12-01", unit == "Percentage",
+  filter(!str_detect(geo, "^Euro"),
+         TIME_PERIOD == "2024-12-01", unit == "Percentage",
          siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
                      "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
                      "Wind", "Solar"),
          #geo %in% c("Norway", "Albania", "Iceland", "Serbia", "Poland", "Kosovo*"),
          values > 0.01) %>% 
   mutate(siec = fct_recode(siec, "Въглища" = "Coal and manufactured gases", "Природен газ" = "Natural gas", 
-                           "Ядрена енергия" = "Nuclear fuels and other fuels n.e.c.",
+                           "Ядрена" = "Nuclear fuels and other fuels n.e.c.",
                            "Нефт" = "Oil and petroleum products (excluding biofuel portion)", 
                            "Вода" = "Hydro", "Геотермална" = "Geothermal",
                            "Вятър" =  "Wind","Слънце" = "Solar"),
@@ -47,7 +48,7 @@ nrg_cb_pem %>%
   geom_col(show.legend = F) +
   geom_text(aes(label = paste0(round(values, 2), "%")), size = 4, hjust = -0.1) +
   scale_fill_manual(values = c("Въглища" = "black", "Природен газ" = "lightblue", 
-                               "Ядрена енергия" = "red",
+                               "Ядрена" = "red",
                                "Нефт" = "brown", 
                                "Вода" = "blue", "Геотермална" = "gray",
                                "Вятър" = "green", "Слънце" = "orange")) +

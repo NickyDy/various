@@ -17,12 +17,6 @@ write_rds(votes, "shiny/elections/votes.rds")
 write_rds(mand, "shiny/elections/mand.rds")
 write_rds(activity, "shiny/elections/activity.rds")
 
-oct_2024 <- read_rds("oct_2024.rds")
-
-votes_new <- votes %>% filter(vote_date != "Октомври_2024") %>% 
-  bind_rows(., oct_2024)
-write_rds(votes_new, "shiny/elections/votes_new.rds")
-
 glimpse(oct_2024)
 oct_2024 %>% map_dfr(~ sum(is.na(.))) %>% View()
 #-----------------------------------------
@@ -61,7 +55,7 @@ space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "",
 }
 #--------------------------------------------------------
 votes %>%
-  filter(oblast == "Плевен") %>%
+  filter(code == "143200140") %>%
   mutate(vote_date = fct_relevel(vote_date,
                                  "Октомври_2024",
                                  "Юни_2024",
@@ -73,7 +67,7 @@ votes %>%
   															 "Март_2017")) %>%
   group_by(vote_date, party) %>%
   summarise(sum_votes = sum(votes)) %>%
-  filter(sum_votes >= 1000) %>%
+  filter(sum_votes >= 1) %>%
   mutate(party = fct_reorder(party, sum_votes)) %>%
   ggplot(aes(sum_votes, party)) +
   geom_col(aes(fill = party), position = "dodge", show.legend = F) +
@@ -552,18 +546,22 @@ sheet_5 <- function(x){
 
 df <- map(files, sheet_5) %>% bind_rows()
 
-df %>% 
-  mutate(`т. 8 (т. 12) Действителни гласове` = as.numeric(`т. 8 (т. 12) Действителни гласове`)) %>% 
-  summarise(party_sum = sum(`т. 8 (т. 12) Действителни гласове`),
-            .by = c(`П/КП/МК/НК`)) %>%
-  mutate(party_perc = party_sum / sum(party_sum) * 100) %>% 
-  arrange(-party_sum)
+oct_2024_new <- df %>% 
+  select(code = `Номер на СИК`, oblast = Област, obshtina = Община, section = `Населено място`,
+              ballots = `Вид бюлетини`, party = `П/КП/МК/НК`, votes = `т. 8 (т. 12) Действителни гласове`) %>%
+  mutate(votes = as.numeric(votes)) %>% 
+  summarise(sum_votes = sum(votes), .by = c(code, oblast, obshtina, section, party)) %>% 
+  pivot_wider(names_from = "party", values_from = "sum_votes")
+oct_2024_new <- read_csv("oct_2024_new.csv")
 
-oct_2024_new <- oct_2024 %>%
- pivot_wider(names_from = party, values_from = votes)
+oct_2024_new %>% 
+  mutate(vote_date = "Октомври_2024", .before = code) %>% 
+  pivot_longer(6:33, names_to = "party", values_to = "votes") %>%
+  summarise(sum_votes = sum(votes), .by = c(oblast, obshtina, section, code)) %>% view
+
 write_csv(oct_2024_new, "oct_2024.csv")
 
-glimpse(ns01)
+glimpse(df)
 
 apr_2023_pref %>% 
   mutate(type_pref = fct_other(type_pref, keep = "Без", other_level = "Със")) %>% 
@@ -660,10 +658,9 @@ oct_2024 %>%
   theme(text = element_text(size = 16)) +
   facet_wrap(vars(ballot), scales = "free_y")
 #--------------------------------------------
-oct_2024 <- read_csv2("votes.csv")
+oct_2024_new <- read_csv("data/elections/oct_2024_new.csv")
 
-oct_2024 <- oct_2024 %>% 
-  pivot_longer(6:33, names_to = "party", values_to = "votes") %>% 
+oct_2024_new <- oct_2024_new %>% 
   mutate(oblast = case_when(
     str_detect(code, "^16") ~ "Пловдив град",
     str_detect(code, "^17") ~ "Пловдив - област",

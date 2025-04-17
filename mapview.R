@@ -4,7 +4,7 @@ library(sf)
 library(jsonlite)
 #library(tidygeocoder)
 
-mapviewOptions(basemaps = c("OpenStreetMap"), fgb = F)
+mapviewOptions(basemaps = c("OpenStreetMap", "Esri.WorldImagery"), fgb = F)
 #"Esri.WorldImagery", "OpenTopoMap"
 
 df <- tibble(address = c("Ямбол", "Бургас")) %>% 
@@ -13,10 +13,19 @@ map <- st_read("data/obsh_map.gpkg")
 zt <- st_read("data/zt.gpkg")
 nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
-map_places <- read_csv("data/map_places.csv") %>% 
-  st_as_sf(coords = c("long", "lat"), crs = c(4326))
-sof_sam <- st_read("sof_samokov.kmz")
+#----------------------------
+all_places <- st_read("data/maps/all_places.geojson")
 
+df1 <- st_read("data/maps/Ямбол - Асеново - Симеоново - Ямбол.kmz", layer = "ACTIVE LOG")
+df2 <- st_read("data/maps/Ямбол - Стефан-Караджово - Елхово - Ямбол.kmz", layer = "Track")
+df3 <- st_read("data/maps/Ямбол - Айваджика_ София - Витоша.kmz", layer = "ACTIVE LOG 002")
+df4 <- st_read("data/maps/Ямбол - Генерал Инзово - Тенево - Ямбол.kmz", layer = "ACTIVE LOG 030")
+df5 <- st_read("data/maps/Way points - Dissertation and Diploma.kmz", layer = "Waypoints")
+df6 <- st_read("data/maps/София - Самоков - София.kmz", layer = "tracks")
+df7 <- st_read("data/maps/Скалица - 3-ти август, 2014.kmz", layer = "tracks")
+
+st_layers("data/maps/Скалица - 3-ти август, 2014.kmz")
+#-----------------------------------------
 oblasti <- st_read("data/oblasti.geojson")
 obshtini <- st_read("data/obshtini.geojson")
 sett <- st_read("data/settlements.geojson")
@@ -27,6 +36,11 @@ elev <- ekatte %>% select(ekatte, text)
 sett_elev <- sett %>% left_join(elev, by = "ekatte")
 
 colors <- c('#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#990000')
+
+df5 %>% mapview(zcol = "Name", legend = F, color = "red", col.regions = "red")
+
+all_places %>% 
+  mapview(zcol = "name", legend = F, color = "red", col.regions = "red")
 
 sett_elev %>% 
   mapview(color = "blue", zcol = "text",
@@ -61,9 +75,6 @@ nb %>%
 zt %>% select(type, name, geom) %>% 
   mapview(legend = F)
 
-map_places %>% 
-  mapview(zcol = "name", legend = F, color = "red", col.regions = "red")
-
 za %>% st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>% 
   mapview(legend = F, col.regions = "red", color = "red")
 
@@ -71,7 +82,11 @@ sett %>% select(-contains) %>%
   mapview(legend = F, zcol = "nuts4", col.regions = "white", alpha.regions = 0, color = "blue")
 glimpse(und_water)
 
-und_water %>% select(oblast, site_name, lat, long) %>% drop_na() %>% 
+und_water <- read_rds("shiny/und_water/underground_water.rds") %>% 
+  select(oblast, site_name, lat, long) %>% drop_na()
+
+und_water %>% 
   #filter(oblast == "Ямбол") %>% 
   st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>% 
-  mapview(legend = F, zcol = "oblast", cex = 3, label = und_water$site_name)
+  mapview(legend = F, zcol = "site_name", cex = 3, label = und_water$site_name,
+          col.regions = "red", color = "red")
