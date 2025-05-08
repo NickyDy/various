@@ -3,19 +3,7 @@ library(rvest)
 library(janitor)
 library(patchwork)
 library(tidytext)
-
-xe_usd<-read_html("https://www.xe.com/currencyconverter/convert/?Amount=1&From=USD&To=BGN") %>% 
-  html_table()
-xe_usd<-xe_usd[[1]] %>% select(1,2) %>% slice(1) %>% rename("cur" = "USD", "selling" = "BGN") %>% 
-  mutate(cur = fct_recode(cur, "USD" = "1 USD"), bank = "XE", date = today(tzone = "")) %>%
-  mutate(selling = str_sub(selling, start = 1L, end = -4L), selling = as.numeric(selling))
-
-xe_eur<-read_html("https://www.xe.com/currencyconverter/convert/?Amount=1&From=EUR&To=BGN") %>% 
-  html_table()
-xe_eur<-xe_eur[[1]] %>% select(1,2) %>% slice(1) %>% rename("cur" = "EUR", "selling" = "BGN") %>% 
-  mutate(cur = fct_recode(cur, "EUR" = "1 EUR"), bank = "XE", date = today(tzone = "")) %>% 
-  mutate(selling = str_sub(selling, start = 1L, end = -4L), selling = as.numeric(selling))
-xe<-bind_rows(xe_usd, xe_eur)
+library(httr2)
 
 bnb<-read_html("https://www.bnb.bg/Statistics/StExternalSector/StExchangeRates/StERForeignCurrencies/index.htm") %>% 
   html_table()
@@ -64,8 +52,7 @@ tbi<-tbi[[1]] %>% select(2:3) %>% slice(11,5) %>% mutate(cur = c("USD", "EUR")) 
   select("cur", "buying" = "Купува", "selling" = "Продава") %>% 
   mutate(bank = "TBI", date = today(tzone = ""))
 
-df <- bind_rows(xe, 
-                bnb, 
+df <- bind_rows(bnb, 
                 ckb, 
                 mun,
                 #post,

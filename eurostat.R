@@ -1,19 +1,23 @@
 library(tidyverse)
 library(eurostat)
 library(tidytext)
+#library(ggrepel)
+#library(readxl)
 #library(jsonlite)
 #library(scales)
 # library(rnaturalearth)
 # library(rnaturalearthdata)
 # library(sf)
 # library(patchwork)
+options(scipen = 100)
+
 toc <- get_eurostat_toc() %>% 
 	janitor::clean_names() %>% 
-	select(-values, -last_table_structure_change) %>% 
+	select(-values, -hierarchy) %>% 
 	filter(type %in% c("table", "dataset")) %>% 
 	distinct()
 
-prc_hicp_mmor  <- get_eurostat("prc_hicp_mmor", type = "label", 
+naio_10_fgte <- get_eurostat("naio_10_fgte", type = "label", 
                             time_format = "date", stringsAsFactors = T)
 
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
@@ -21,6 +25,7 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
   select(name, geometry) %>% 
   mutate(name = fct_recode(name, "Czechia" = "Czech Rep.", "North Macedonia" = "Macedonia",
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
+glimpse(export)
 #-------------------------------------------------------------------------
 write_rds(tec00011, "shiny/eurostat/tec00011.rds")
 
@@ -28,7 +33,133 @@ write_rds(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.rds")
 write_rds(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.rds")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
-prc_hicp_mmor %>% count(TIME_PERIOD) %>% arrange(rev(TIME_PERIOD))
+
+export <- read_csv("~/Downloads/estat_ds-045409_filtered_en.csv")
+export %>% count(reporter) %>% view
+
+export %>% select(reporter, partner, product, TIME_PERIOD, OBS_VALUE) %>% 
+  filter(partner == "Extra-EU (= 'WORLD' - 'EU_INTRA')", TIME_PERIOD %in% 2019:2024,
+         product == "Wine of fresh grapes, incl. fortified wines; grape must, partly fermented and of an actual alcoholic strength of > 0,5% vol or grape must with added alcohol of an actual alcoholic strength of > 0,5% vol") %>%
+  mutate(reporter = fct_recode(reporter, "France" = "France (incl. Saint Barthélemy 'BL' -> 2012; incl. French Guiana 'GF', Guadeloupe 'GP', Martinique 'MQ', Réunion 'RE' from 1997; incl. Mayotte 'YT' from 2014)",
+                               "Germany" = "Germany (incl. German Democratic Republic 'DD' from 1991)",
+                               "Belgium" = "Belgium (incl. Luxembourg 'LU' -> 1998)",
+                               "Spain" = "Spain (incl. Canary Islands 'XB' from 1997)",
+                               "Italy" = "Italy (incl. San Marino 'SM' -> 1993)"),
+         OBS_VALUE = parse_number(OBS_VALUE),
+         col = reporter,
+         reporter = reorder_within(reporter, OBS_VALUE, TIME_PERIOD),
+         col = if_else(col == "Bulgaria", "0", "1")) %>%
+  group_by(TIME_PERIOD) %>% 
+  mutate(perc = OBS_VALUE / sum(OBS_VALUE) * 100) %>% 
+  ggplot(aes(perc, reporter, fill = col)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = round(perc, 3)), size = 4, hjust = -0.1) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.2))) +
+  scale_y_reordered() +
+  labs(y = NULL, x = "Проценти", title = "Износ на вино към страни извън ЕС за 2019-2024 г.",
+       caption = "Източник на данните: Евростат") +
+  theme(text = element_text(size = 14), 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  facet_wrap(vars(TIME_PERIOD), scales = "free_y")
+  
+
+mil_exp %>% 
+  pivot_longer(-Country) %>%
+  drop_na(value) %>%
+  mutate(name = as.numeric(name)) %>% 
+  filter(Country %in% c("China", "United States of America", "Russia", "United Kingdom", "France",
+                        "Germany", "Japan", "Bulgaria"), name >= 1990) %>%
+  ggplot(aes(value, factor(name), fill = Country)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = round(value / 1000, 1)), size = 5, hjust = -0.1) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.4))) +
+  scale_fill_brewer(palette = "Set1") +
+  labs(y = NULL, x = "Военни разходи (млрд. $)") +
+  theme(text = element_text(size = 16), 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  facet_wrap(vars(Country), nrow = 1)
+
+mil_exp_gdp %>% 
+  pivot_longer(-Country) %>%
+  drop_na(value) %>%
+  mutate(name = as.numeric(name)) %>% 
+  filter(Country %in% c("China", "United States of America", "Russia", "United Kingdom", "France",
+                        "Germany", "Japan", "Bulgaria"), name >= 1990) %>%
+  ggplot(aes(value, factor(name), fill = Country)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = round(value * 100, 2)), size = 5, hjust = -0.1) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.3))) +
+  scale_fill_brewer(palette = "Set1") +
+  labs(y = NULL, x = "% от БВП") +
+  theme(text = element_text(size = 16), 
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  facet_wrap(vars(Country), nrow = 1)
+
+isoc_sk_cskl_i21 %>%
+  filter(ind_type == "All individuals", 
+         indic_is %in% c("Individuals who have written code in a programming language (3 months)",
+                         "Individuals who changed the settings of software, app or device (3 months)",
+                         "Individuals who downloaded or installed software or apps (3 months)",
+                         "Individuals who used spreadsheet software (3 months)",
+                         "Individuals who used advanced features of spreadsheet software to organise, analyse, structure or modify data (3 months)",
+                         "Individuals who have created files integrating elements such as text, pictures, tables, charts, animations or sound (3 months)"),
+         unit == "Percentage of individuals",
+         TIME_PERIOD == "2023-01-01", !str_detect(geo, "^Euro")) %>%
+  mutate(col = geo, 
+         geo = reorder_within(geo, values, indic_is),
+         col = if_else(col == "Bulgaria", "0", "1"),
+         indic_is = str_wrap(indic_is, 75)) %>%
+  ggplot(aes(values, geo, fill = col)) +
+  geom_col(show.legend = F) +
+  scale_y_reordered() +
+  geom_text(aes(label = paste0(values, "%")), size = 3, hjust = -0.1) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.3))) +
+  labs(y = NULL, x = NULL) +
+  theme(text = element_text(size = 12)) +
+  facet_wrap(vars(indic_is), scales = "free_y")
+
+crim_off_cat %>% 
+  filter(unit == "Per hundred thousand inhabitants", 
+         TIME_PERIOD == "2023-01-01",
+         iccs %in% c("Fraud"),
+         values > 0) %>% 
+  mutate(col = geo, 
+         geo = reorder_within(geo, values, iccs),
+         col = if_else(col == "Bulgaria", "0", "1")) %>% 
+  ggplot(aes(values, geo, fill = col)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = values), size = 5, hjust = -0.1) +
+  scale_y_reordered() +
+  coord_cartesian(expand = T) +
+  labs(y = NULL, 
+       x = "Брой престъпления на 100 000 души") +
+  theme(text = element_text(size = 18)) +
+  facet_wrap(vars(iccs), scales = "free_y")
+
+
+min_wage <- earn_mw_cur %>% 
+  filter(currency == "Euro", TIME_PERIOD == "2025-01-01") %>% 
+  select(geo, values)
+energy <- nrg_pc_204 %>% 
+  filter(nrg_cons == "Consumption less than 1 000 kWh - band DA",
+         tax == "All taxes and levies included", 
+         TIME_PERIOD == "2024-07-01", currency == "Euro") %>% 
+  select(geo, values)
+
+df <- inner_join(min_wage, energy, by = "geo")
+
+df %>% drop_na() %>% 
+  ggplot(aes(values.y, values.x)) +
+  geom_hline(aes(yintercept = mean(values.x)), linetype = 2) +
+  geom_vline(aes(xintercept = mean(values.y)), linetype = 2) +
+  geom_point(size = 3) +
+  scale_x_reverse() +
+  geom_text_repel(aes(label = geo), vjust = -0.5, size = 7) +
+  labs(y = "Минимална месечна заплата (Евро)", x = "Цена на електричеството (kWh)") +
+  theme(text = element_text(size = 16))
 
 nrg_cb_pem %>%
   filter(!str_detect(geo, "^Euro"),

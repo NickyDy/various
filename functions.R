@@ -2,7 +2,7 @@ library(tidyverse)
 library(scales)
 
 diss <- read_csv("data/diss.csv")
-votes <- read_parquet("shiny/elections/votes.parquet")
+votes <- read_rds("shiny/elections/votes_new.rds")
 #-------------------------
 sections <- votes %>% 
   #filter(party == "ДПС-НH", vote_date == "Октомври_2024") %>%

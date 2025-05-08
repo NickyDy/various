@@ -2,9 +2,9 @@ library(tidyverse)
 library(mapview)
 library(sf)
 library(jsonlite)
-#library(tidygeocoder)
-
 mapviewOptions(basemaps = c("OpenStreetMap", "Esri.WorldImagery"), fgb = F)
+
+#library(tidygeocoder)
 #"Esri.WorldImagery", "OpenTopoMap"
 
 df <- tibble(address = c("Ямбол", "Бургас")) %>% 
@@ -90,3 +90,36 @@ und_water %>%
   st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>% 
   mapview(legend = F, zcol = "site_name", cex = 3, label = und_water$site_name,
           col.regions = "red", color = "red")
+
+mapView(
+  x,
+  map = NULL,
+  pane = "auto",
+  canvas = useCanvas(x),
+  viewer.suppress = mapviewGetOption("viewer.suppress"),
+  zcol = NULL,
+  burst = FALSE,
+  color = mapviewGetOption("vector.palette"),
+  col.regions = mapviewGetOption("vector.palette"),
+  at = NULL,
+  na.color = mapviewGetOption("na.color"),
+  cex = 6,
+  lwd = lineWidth(x),
+  alpha = 0.9,
+  alpha.regions = regionOpacity(x),
+  na.alpha = regionOpacity(x),
+  map.types = mapviewGetOption("basemaps"),
+  verbose = mapviewGetOption("verbose"),
+  popup = TRUE,
+  layer.name = NULL,
+  label = zcol,
+  legend = mapviewGetOption("legend"),
+  legend.opacity = 1,
+  homebutton = mapviewGetOption("homebutton"),
+  native.crs = FALSE,
+  highlight = mapviewHighlightOptions(x, alpha.regions, alpha, lwd),
+  maxpoints = getMaxFeatures(x),
+  hide = FALSE,
+  ...
+)
+
