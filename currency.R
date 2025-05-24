@@ -3,7 +3,6 @@ library(rvest)
 library(janitor)
 library(patchwork)
 library(tidytext)
-library(httr2)
 
 bnb<-read_html("https://www.bnb.bg/Statistics/StExternalSector/StExchangeRates/StERForeignCurrencies/index.htm") %>% 
   html_table()

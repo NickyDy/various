@@ -10,3 +10,5 @@ df_may_03 <- tr_03_05_2025[["Message"]][["Body"]][[1]][["Deeds"]][[1]][["Deed"]]
 df_may_01 <- tr_01_05_2025[["Message"]][["Body"]][[1]][["Deeds"]][[1]][["Deed"]][[1]][["$"]] %>% as_tibble()
 
 df <- bind_rows(df_may_02, df_may_03, df_may_01) %>% distinct()
+
+  

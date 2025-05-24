@@ -140,25 +140,50 @@ votes %>%
   labs(y = "Секция", x = "Индекс на волатилност") +
   theme(axis.title = element_text(hjust = 1)) +
   facet_wrap(vars(oblast), scales = "free_y", nrow = 3)
-#----------------------------------
+votes %>% 
+  filter(vote_date == "Октомври_2024",
+         party %in% c("ВЕЛИЧИЕ", "ДПС-НH", "АПС", "МЕЧ",
+                      "БСП-ОЛ", "ГЕРБ-СДС", "ПП-ДБ", "ВЪЗРАЖДАНЕ",
+                      "ИТН")) %>% 
+  mutate(euro = case_when(party %in% c("БСП-ОЛ", "ГЕРБ-СДС", "ПП-ДБ","ДПС-НH", "АПС") ~ "За еврото",
+                          party %in% c("ВЕЛИЧИЕ", "МЕЧ", "ИТН", "ВЪЗРАЖДАНЕ") ~ "Против еврото")) %>% 
+  summarise(sum_euro = sum(votes), .by = euro) %>%
+  mutate(euro = fct_inorder(euro)) %>% 
+  ggplot(aes(sum_euro, euro, fill = euro)) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = space_s(sum_euro)), 
+            position = position_dodge(width = 1), 
+            hjust = -0.05, size = 24, size.unit = "pt") +
+  theme(text = element_text(size = 24),
+        axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank()) +
+  scale_x_continuous(expand = expansion(mult = c(.01, .2))) +
+  labs(y = NULL, x = "Брой гласове", title = "Привърженици и противници на еврото на база броя гласове\nза парламентарно представените партии на последните избори",
+       caption = "Източник на данните: ЦИК.") +
+  annotate("text", x = c(1635456/2, 700039/2), y = c(2, 1), label = c("ГЕРБ-СДС, ПП-ДБ, ДПС-НH, АПС, БСП-ОЛ",
+                                                                      "ВЪЗРАЖДАНЕ, ИТН, МЕЧ, ВЕЛИЧИЕ"),
+           size = 8, color = "white", fontface = "bold") +
+  scale_fill_manual(values = c("За еврото" = "blue", 
+                               "Против еврото" = "red"))
+#-------------------------------------------------------
 votes %>% 
   #filter(party == "ДПС-НH", vote_date == "Октомври_2024") %>%
   mutate(party = fct_recode(party, "ДПС-НH" = "ДПС")) %>% 
   filter(vote_date %in% c("Октомври_2024", "Юни_2024")) %>%
   pivot_wider(names_from = vote_date, values_from = votes) %>%
   mutate(diff = Октомври_2024 / Юни_2024) %>%
-  filter(Юни_2024 > 2 & diff > 15) %>% pull(code) %>% str_flatten(collapse = "', '")
+  filter(Юни_2024 > 2 & diff > 15) %>%
   unite("section_code", c("section", "code"), sep = " - ") %>% 
   mutate(section_code = reorder_within(section_code, diff, party)) %>%
   ggplot(aes(diff, section_code, fill = party)) +
   geom_col(show.legend = F) +
   scale_y_reordered() +
   scale_fill_manual(values = c("ДПС-НH" = "purple", "ГЕРБ-СДС" = "blue", "ИТН" = "#0096FF", 
-                               "ПП-ДБ" = "darkblue", "ЛЕВИЦАТА!" = "red")) +
+                               "ПП-ДБ" = "darkblue", "ЛЕВИЦАТА!" = "red", "ВЕЛИЧИЕ" = "darkgreen")) +
   scale_x_continuous(expand = expansion(mult = c(.01, .2))) +
   geom_text(aes(label = diff), position = position_dodge(width = 1), hjust = -0.1, size = 3.5) +
   labs(x = "Брой гласове", y = "Населено място - секция", 
-       title = "Разлика в броя гласове на последните (октомври, 2024) в сравнение с предпоследните (юни, 2024) избори, получени от съответните партии.\nПоказани са само секции с повече от 80 гласа разлика.") +
+       title = "Разлика в броя гласове на последните (октомври, 2024) в сравнение с предпоследните (юни, 2024) избори, получени от съответните партии.\nПоказани са само секции с повече от 15 пъти разлика.") +
   facet_wrap(vars(party), scales = "free_y", nrow = 1) +
   theme(text = element_text(size = 14))
   

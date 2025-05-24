@@ -114,7 +114,7 @@ ipcmk_n <- ipcmk %>%
   separate(name, c("index", "year", "month"), sep = "_") %>%
   mutate(value = parse_number(value)) %>% drop_na(value)
 
-plot_inf("Food", "Bulgaria")
+plot_inf("All-items HICP", "Spain")
 
 plot_inf <- function(name_coicop, country){
   
@@ -164,7 +164,7 @@ euro_zone <- time %>%
     geo == "Latvia" ~ as.Date("2014-01-01"),
     geo == "Lithuania" ~ as.Date("2015-01-01"),
     geo == "Croatia" ~ as.Date("2023-01-01"),),
-    label = "Влизане в\nЕврозоната", x = euro, y = level * 2) %>% 
+    label = "Euro-\nzone", x = euro, y = level * 2) %>% 
   distinct(euro, label, x, y)
 
 time %>%
@@ -187,7 +187,7 @@ time %>%
             size = 5, color = "red", hjust = 0 - 0.1, fontface = "bold") +
   scale_color_manual(values = c("red", "black")) +
   labs(x = NULL, y = "Инфлация (%)", 
-       title = name_coicop)
+       title = paste0(name_coicop, ", ", country))
 }
 
 hipc %>% count(coicop) %>% view
