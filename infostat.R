@@ -163,7 +163,7 @@ euro_zone <- time %>%
     geo == "Estonia" ~ as.Date("2011-01-01"),
     geo == "Latvia" ~ as.Date("2014-01-01"),
     geo == "Lithuania" ~ as.Date("2015-01-01"),
-    geo == "Croatia" ~ as.Date("2023-01-01"),),
+    geo == "Croatia" ~ as.Date("2023-01-01")),
     label = "Euro-\nzone", x = euro, y = level * 2) %>% 
   distinct(euro, label, x, y)
 

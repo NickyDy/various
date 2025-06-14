@@ -13,6 +13,14 @@ map <- st_read("data/obsh_map.gpkg")
 zt <- st_read("data/zt.gpkg")
 nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
+ptp <- read_csv2("various/mrv_database_done.csv") %>% 
+  rename(lat = y, long = x) %>% 
+  mutate(date = dmy(date),
+         month = month(date),
+         day = day(date),
+         lat = case_when(lat > 100 ~ lat / 1000, .default = lat),
+         long = case_when(long > 100 ~ long / 1000, .default = long)) %>% 
+  drop_na(lat, long)
 #----------------------------
 all_places <- st_read("data/maps/all_places.geojson")
 
@@ -41,6 +49,25 @@ df5 %>% mapview(zcol = "Name", legend = F, color = "red", col.regions = "red")
 
 all_places %>% 
   mapview(zcol = "name", legend = F, color = "red", col.regions = "red")
+
+glimpse(ptp)
+ptp %>% map_dfr(~ sum(is.na(.)))
+
+ptp_map <- ptp %>%
+  filter(
+    #date == "2025-03-31",
+    year %in% c(2025), 
+    month %in% c(3), 
+    day %in% c(31)
+    #type == "",
+    #died == "да",
+    #injured == "да"
+  )
+
+ptp_map %>% 
+  st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>% 
+  mapview(label = ptp_map$type, zcol = "died", color = c("black", "red"),
+          legend = T, col.regions = c("black", "red"), cex = 3)
 
 sett_elev %>% 
   mapview(color = "blue", zcol = "text",

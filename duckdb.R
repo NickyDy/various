@@ -4,9 +4,9 @@ library(nanoparquet)
 
 con <- DBI::dbConnect(duckdb::duckdb(), dbdir = "duckdb")
 
-dbWriteTable(con, "rgfi", rgfi)
+dbWriteTable(con, "votes_new", votes_new)
 
-dbRemoveTable(con, "rgfi")
+dbRemoveTable(con, "votes_new")
 
 dbListTables(con)
 
@@ -17,3 +17,4 @@ duckdb_read_csv(con, "rgfi", "work/rgfi.csv")
 dbDisconnect(con)
 
 rgfi <- read_parquet("work/rgfi.parquet")
+votes_new <- read_rds("shiny/elections/votes_new.rds")
