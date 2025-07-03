@@ -163,7 +163,7 @@ df %>% drop_na() %>%
 
 nrg_cb_pem %>%
   filter(!str_detect(geo, "^Euro"),
-         TIME_PERIOD == "2024-12-01", unit == "Percentage",
+         TIME_PERIOD == "2025-02-01", unit == "Percentage",
          siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
                      "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
                      "Wind", "Solar"),
@@ -229,7 +229,8 @@ env_bio4 %>%
   facet_wrap(vars(areaprot), scales = "free_y")
 
 data <- hlth_cd_iap %>% 
-  filter(indic_he == "Premature death", unit == "Rate",
+  filter(indic_he == "Premature death", 
+         unit == "Rate",
          !str_detect(geo, "^Euro")) %>% 
   summarise(m = mean(values), .by = geo) %>% 
   mutate(col = case_when(m > 150 ~ "0",
@@ -237,7 +238,8 @@ data <- hlth_cd_iap %>%
                          .default = "1"))
 
 hlth_cd_iap %>% 
-  filter(indic_he == "Premature death", unit == "Rate",
+  filter(indic_he == "Premature death", 
+         unit == "Rate",
          !str_detect(geo, "^Euro")) %>% 
   ggplot(aes(TIME_PERIOD, values)) +
   geom_line(linewidth = 0.1) +
@@ -276,12 +278,10 @@ hlth_cd_iap %>%
 
 demo_find %>%
   filter(indic_de == "Proportion of live births outside marriage",
-         TIME_PERIOD == c("2022-01-01", "2007-01-01"),
+         TIME_PERIOD == c("2023-01-01"),
          !str_detect(geo, "Germany including former GDR"),
          !str_detect(geo, "^Euro")) %>%
   mutate(col = geo, geo = reorder_within(geo, values, TIME_PERIOD),
-         geo = fct_recode(geo, "Turkey" = "Türkiye"),
-         TIME_PERIOD = fct_recode(as.character(TIME_PERIOD), "2006" = "2007-01-01", "2021" = "2022-01-01"),
          col = if_else(col == "Bulgaria", "1", "0")) %>%
   ggplot(aes(values, geo, fill = col)) +
   geom_col() +
@@ -292,9 +292,8 @@ demo_find %>%
             position = position_dodge(width = 1), hjust = -0.1, size = 4.5) +
   theme(text = element_text(size = 18), legend.position = "none",
         axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-  labs(title = "Процент извънбрачни деца, родени през 2006 и 2021 г.", y = NULL, x = NULL,
-       caption = "Източник на данните: Eurostat") +
-  facet_wrap(vars(TIME_PERIOD), scales = "free_y")
+  labs(title = "Процент извънбрачни деца, родени през 2023 г.", y = NULL, x = NULL,
+       caption = "Източник на данните: Eurostat")
 
 hlth_cd_apr %>% 
   filter(icd10 == "Total",
@@ -768,7 +767,7 @@ pop + area
 ei_isen_m <- get_eurostat("ei_isen_m", type = "label", time_format = "date") %>%
   mutate_if(is_character, as_factor)
 
-p1 <- ei_isen_m %>%
+ei_isen_m %>%
   filter(
     indic == "Imports of natural gas, TJ (GCV)",
     time == "2023-04-01",
