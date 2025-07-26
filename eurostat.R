@@ -17,7 +17,7 @@ toc <- get_eurostat_toc() %>%
 	filter(type %in% c("table", "dataset")) %>% 
 	distinct()
 
-prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", 
+demo_gind <- get_eurostat("demo_gind", type = "label", 
                             time_format = "date", stringsAsFactors = T)
 
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
@@ -33,6 +33,26 @@ write_rds(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.rds")
 write_rds(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.rds")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
+
+demo_gind %>% 
+  filter(indic_de == "Population on 1 January - total",
+         !str_detect(geo, "Euro|Eco|GDR|Metro"),
+         str_detect(geo, "^[A-H]")) %>% 
+  mutate(geo = fct_inorder(geo)) %>% 
+  ggplot(aes(TIME_PERIOD, values)) +
+  #geom_point(alpha = 0.1) +
+  geom_smooth(method = "loess", se = F) +
+  facet_wrap(vars(geo), scales = "free_y", ncol = 5)
+
+demo_gind %>% 
+  filter(indic_de == "Population on 1 January - total",
+         !str_detect(geo, "Euro|Eco|GDR|Metro"),
+         str_detect(geo, "^[I-Z]")) %>% 
+  mutate(geo = fct_inorder(geo)) %>% 
+  ggplot(aes(TIME_PERIOD, values)) +
+  #geom_point(alpha = 0.1) +
+  geom_smooth(method = "loess", se = F) +
+  facet_wrap(vars(geo), scales = "free_y", ncol = 5)
 
 export <- read_csv("~/Downloads/estat_ds-045409_filtered_en.csv")
 export %>% count(reporter) %>% view
@@ -62,7 +82,6 @@ export %>% select(reporter, partner, product, TIME_PERIOD, OBS_VALUE) %>%
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) +
   facet_wrap(vars(TIME_PERIOD), scales = "free_y")
-  
 
 mil_exp %>% 
   pivot_longer(-Country) %>%
