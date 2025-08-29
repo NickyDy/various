@@ -17,7 +17,7 @@ toc <- get_eurostat_toc() %>%
 	filter(type %in% c("table", "dataset")) %>% 
 	distinct()
 
-demo_gind <- get_eurostat("demo_gind", type = "label", 
+prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", 
                             time_format = "date", stringsAsFactors = T)
 
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
