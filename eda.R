@@ -1,13 +1,23 @@
 library(tidyverse)
 library(tidytext)
+library(DataExplorer)
 # library(GGally)
 # library(DataExplorer)
 # library(performance)
 # library(tidymodels)
 
 diss <- read_csv("data/diss.csv") %>% mutate_if(is.character, as.factor)
-#-----------------------
-glimpse(boston)
+#----------------------------------------------------------------------
+glimpse(diss)
+create_report(diss)
+introduce(diss)
+plot_intro(diss)
+plot_missing(diss)
+plot_qq(diss)
+plot_str(diss)
+profile_missing(diss) %>% view
+split_columns(diss)
+
 diss %>% count(top, sort = T)
 colSums(is.na(diss))
 any(duplicated(diss$plot))

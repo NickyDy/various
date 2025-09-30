@@ -4,7 +4,7 @@ library(tidytext)
 options(scipen = 999)
 
 energy <- read_csv("https://nyc3.digitaloceanspaces.com/owid-public/data/energy/owid-energy-data.csv")
-covid <- read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
+covid <- read_csv("https://catalog.ourworldindata.org/garden/covid/latest/compact/compact.csv")
 gini <- read_csv("gini.csv") %>% mutate(across(`1960`:`2021`, as.double)) %>% 
 	pivot_longer(`1960`:`2021`, names_to = "year", values_to = "gini") %>% drop_na(gini) %>% 
 	group_by(country) %>% 
@@ -21,7 +21,7 @@ glimpse(energy)
 energy %>% count(year) %>% pull(year)
 
 energy %>%
-  filter(country %in% c("Greece", "Turkey", "Bulgaria", "North Macedonia", "Serbia", "Romania"), year == 2023) %>%
+  filter(country %in% c("Europe", "Asia", "South America", "North America", "Australia", "Africa"), year == 2023) %>%
   select(country, year, contains("share_elec"), -low_carbon_share_elec, -fossil_share_elec, -renewables_share_elec,
          -other_renewables_share_elec, -other_renewables_share_elec_exc_biofuel) %>%
   pivot_longer(-c(country, year)) %>%
@@ -85,16 +85,14 @@ covid %>%
   facet_wrap(~ name, scales = "free_y", ncol = 1)
 
 covid %>% 
-  filter(continent == "Europe", new_deaths > 0, location %in% c("Italy", "Spain", "Germany", "Ukraine",
-                                                                "United Kingdom", "Romania", "Poland",
-                                                                "France", "Bulgaria")) %>% 
-  ggplot(aes(date, new_deaths)) +
+  filter(country %in% c("Bulgaria", "Sweden", "Denmark", "Ireland")) %>% 
+  ggplot(aes(date, excess_mortality)) +
   geom_point() +
   geom_line() +
   scale_y_continuous(n.breaks = 5) +
   labs(x = "Години", y = "Нови случаи на COVID", caption = "Източник на данните: OWID") +
   theme(text = element_text(size = 16)) +
-  facet_wrap(~ location, scales = "free_y")
+  facet_wrap(~ country)
 	
 energy %>% 
 	filter(country == "Bulgaria") %>% 

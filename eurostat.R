@@ -17,7 +17,7 @@ toc <- get_eurostat_toc() %>%
 	filter(type %in% c("table", "dataset")) %>% 
 	distinct()
 
-prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", 
+gov_10dd_edpt1 <- get_eurostat("gov_10dd_edpt1", type = "label", 
                             time_format = "date", stringsAsFactors = T)
 
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
@@ -27,7 +27,7 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
 glimpse(export)
 #-------------------------------------------------------------------------
-write_rds(tec00011, "shiny/eurostat/tec00011.rds")
+write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
 
 write_rds(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.rds")
 write_rds(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.rds")
@@ -182,7 +182,7 @@ df %>% drop_na() %>%
 
 nrg_cb_pem %>%
   filter(!str_detect(geo, "^Euro"),
-         TIME_PERIOD == "2025-02-01", unit == "Percentage",
+         TIME_PERIOD == "2025-06-01", unit == "Percentage",
          siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
                      "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
                      "Wind", "Solar"),

@@ -1171,7 +1171,7 @@ prestupnost_n <- prestupnost %>%
   slice(-c(1:1)) %>%
   mutate(`1` = str_replace(`1`, "__", "oblast")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(2:321, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(2:379, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "age", "sex"), sep = "_") %>%
   mutate(pop = parse_number(pop), 
          age = str_remove_all(age, " "),
