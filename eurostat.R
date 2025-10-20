@@ -17,7 +17,7 @@ toc <- get_eurostat_toc() %>%
 	filter(type %in% c("table", "dataset")) %>% 
 	distinct()
 
-gov_10dd_edpt1 <- get_eurostat("gov_10dd_edpt1", type = "label", 
+nrg_cb_pem <- get_eurostat("nrg_cb_pem", type = "label", 
                             time_format = "date", stringsAsFactors = T)
 
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
@@ -182,7 +182,7 @@ df %>% drop_na() %>%
 
 nrg_cb_pem %>%
   filter(!str_detect(geo, "^Euro"),
-         TIME_PERIOD == "2025-06-01", unit == "Percentage",
+         TIME_PERIOD == "2025-07-01", unit == "Percentage",
          siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
                      "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
                      "Wind", "Solar"),
