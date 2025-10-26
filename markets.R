@@ -1,26 +1,27 @@
 library(tidyverse)
-library(fs)
 library(tidytext)
 library(ggtext)
 
-read_csv_cc <- function(file) {
-  read_csv(file, col_types = "cccccdd")
-}
+billa <- read_csv("https://kolkostruva.bg/upload/8256/import.csv", col_types = c("cccccdd")) %>% 
+  mutate(market = "Billa", .before = everything())
+vilton <- read_csv("https://kolkostruva.bg/upload/8214/import.csv", col_types = c("cccccdd")) %>% 
+  mutate(market = "Vilton", .before = everything())
+kaufland <- read_csv("https://kolkostruva.bg/upload/8260/import.csv", col_types = c("cccccdd")) %>% 
+  mutate(market = "Kaufland", .before = everything())
+lidl <- read_csv("https://kolkostruva.bg/upload/8227/import.csv", col_types = c("cccccdd")) %>% 
+  mutate(market = "Lidl", .before = everything())
+tmarket <- read_csv("https://kolkostruva.bg/upload/4188/KZP_22.10.2025.csv", col_types = c("cccccdd")) %>% 
+  mutate(market = "T Market", .before = everything())
 
-files <- dir_ls("/home/nick/Downloads/", glob = "*.csv")
-markets <- map(files, read_csv_cc) %>%
-  set_names(basename) %>%
-  list_rbind(names_to = "market") %>%
-  bind_rows() %>% distinct() %>% janitor::clean_names() %>% 
-  mutate(market = str_remove(market, ".csv$"))
+markets <- bind_rows(billa, vilton, kaufland, lidl, tmarket) %>% janitor::clean_names() %>% 
+  mutate(cena_v_promocia = na_if(cena_v_promocia, 0))
 
 glimpse(markets)
 
 markets %>% 
-  filter(str_detect(naimenovanie_na_produkta, regex("кренвирш", ignore_case = T)),
+  filter(str_detect(naimenovanie_na_produkta, regex("свинск", ignore_case = T)),
          str_detect(t_rgovski_obekt, regex("ямбол|М-", ignore_case = T)),
          !str_detect(naimenovanie_na_produkta, "^Krina;")) %>%
-  mutate(cena_v_promocia = na_if(cena_v_promocia, 0)) %>%
   reframe(cena_na_drebno = round(mean(cena_na_drebno, na.rm = T), 2),
           cena_v_promocia = round(mean(cena_v_promocia, na.rm = T), 2),
           .by = c(market, naseleno_masto, kod_na_produkta, 
@@ -37,3 +38,15 @@ markets %>%
   labs(x = "Цена (лв); <span style='color:red'>Промоция (лв)</span>", y = NULL) +
   theme(text = element_text(size = 14), axis.title.x = element_markdown()) +
   facet_wrap(vars(market), scales = "free_y")
+
+# read_csv_cc <- function(file) {
+#   read_csv(file, col_types = "cccccdd")
+# }
+# 
+# files <- dir_ls("/home/nick/Downloads/", glob = "*.csv")
+# markets <- map(files, read_csv_cc) %>%
+#   set_names(basename) %>%
+#   list_rbind(names_to = "market") %>%
+#   bind_rows() %>% distinct() %>% janitor::clean_names() %>% 
+#   mutate(market = str_remove(market, ".csv$"))
+
