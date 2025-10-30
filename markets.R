@@ -2,15 +2,15 @@ library(tidyverse)
 library(tidytext)
 library(ggtext)
 
-billa <- read_csv("https://kolkostruva.bg/upload/8256/import.csv", col_types = c("cccccdd")) %>% 
+billa <- read_csv("https://kolkostruva.bg/upload/9639/import.csv", col_types = c("cccccdd")) %>% 
   mutate(market = "Billa", .before = everything())
-vilton <- read_csv("https://kolkostruva.bg/upload/8214/import.csv", col_types = c("cccccdd")) %>% 
+vilton <- read_csv("https://kolkostruva.bg/upload/9593/import.csv", col_types = c("cccccdd")) %>% 
   mutate(market = "Vilton", .before = everything())
-kaufland <- read_csv("https://kolkostruva.bg/upload/8260/import.csv", col_types = c("cccccdd")) %>% 
+kaufland <- read_csv("https://kolkostruva.bg/upload/9641/import.csv", col_types = c("cccccdd")) %>% 
   mutate(market = "Kaufland", .before = everything())
-lidl <- read_csv("https://kolkostruva.bg/upload/8227/import.csv", col_types = c("cccccdd")) %>% 
+lidl <- read_csv("https://kolkostruva.bg/upload/9607/import.csv", col_types = c("cccccdd")) %>% 
   mutate(market = "Lidl", .before = everything())
-tmarket <- read_csv("https://kolkostruva.bg/upload/4188/KZP_22.10.2025.csv", col_types = c("cccccdd")) %>% 
+tmarket <- read_csv("https://kolkostruva.bg/upload/9694/KZP_27.10.2025.csv", col_types = c("cccccdd")) %>% 
   mutate(market = "T Market", .before = everything())
 
 markets <- bind_rows(billa, vilton, kaufland, lidl, tmarket) %>% janitor::clean_names() %>% 
@@ -19,7 +19,7 @@ markets <- bind_rows(billa, vilton, kaufland, lidl, tmarket) %>% janitor::clean_
 glimpse(markets)
 
 markets %>% 
-  filter(str_detect(naimenovanie_na_produkta, regex("свинск", ignore_case = T)),
+  filter(str_detect(naimenovanie_na_produkta, regex("бургаско|burgasko", ignore_case = T)),
          str_detect(t_rgovski_obekt, regex("ямбол|М-", ignore_case = T)),
          !str_detect(naimenovanie_na_produkta, "^Krina;")) %>%
   reframe(cena_na_drebno = round(mean(cena_na_drebno, na.rm = T), 2),

@@ -1,21 +1,14 @@
 library(tidyverse)
 library(tabulapdf)
 
-july_24_2025 <- "https://www.dksbt.bg/doc/%D0%A1%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0%20%D1%86%D0%B5%D0%BD%D0%B8%2024%20%D1%8E%D0%BB%D0%B8%202025_DKSBT.pdf"
-july_23_2025 <- "https://www.dksbt.bg/doc/%D0%A1%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0%20%D1%86%D0%B5%D0%BD%D0%B8%2023%20%D1%8E%D0%BB%D0%B8%202025_DKSBT.pdf"
-july_22_2025 <- "https://www.dksbt.bg/doc/%D0%A1%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0%20%D1%86%D0%B5%D0%BD%D0%B8%2022%20%D1%8E%D0%BB%D0%B8%202025_DKSBT.pdf"
-july_21_2025 <- "https://www.dksbt.bg/doc/%D0%A1%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0%20%D1%86%D0%B5%D0%BD%D0%B8%2021%20%D1%8E%D0%BB%D0%B8%202025_DKSBT.pdf"
-july_18_2025 <- "https://www.dksbt.bg/doc/%D0%A1%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0%20%D1%86%D0%B5%D0%BD%D0%B8%2018%20%D1%8E%D0%BB%D0%B8%202025_DKSBT.pdf"
-july_16_2025 <- "https://www.dksbt.bg/doc/%D0%A1%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0%20%D1%86%D0%B5%D0%BD%D0%B8%2016%20%D1%8E%D0%BB%D0%B8%202025_DKSBT.pdf"
+dams <- "https://www.moew.government.bg/static/media/ups/tiny/Daily%20Bulletin/27102025_Bulletin_Daily.pdf"
 
-july_17_2025 <- "https://www.dksbt.bg/doc/%D0%A1%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B0%20%D1%86%D0%B5%D0%BD%D0%B8%2017%20%D1%8E%D0%BB%D0%B8%202025_DKSBT.pdf"
-
-links1 <- c(july_24_2025, july_23_2025, july_22_2025, july_21_2025, july_18_2025, july_16_2025)
-links2 <- c(july_17_2025, july_23_2025)
+dams_table <- extract_tables(dams, col_names = F, method = "stream", pages = c(3:5)) %>% 
+  pluck(1) %>% as_tibble()
 
 extr_tables_page_1 <- function(links) {
   
-  extract_tables(links, col_names = F, method = "stream", pages = 1)
+  extract_tables(dams, col_names = F, method = "stream", pages = c(3:5))
   
 }
 
