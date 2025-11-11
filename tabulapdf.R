@@ -1,10 +1,35 @@
 library(tidyverse)
 library(tabulapdf)
+library(nanoparquet)
 
-dams <- "https://www.moew.government.bg/static/media/ups/tiny/Daily%20Bulletin/27102025_Bulletin_Daily.pdf"
+link <- "https://www.dksbt.bg/doc/%D0%A1%D0%B5%D0%B4%D0%BC%D0%B8%D1%87%D0%B5%D0%BD%20%D0%B1%D1%8E%D0%BB%D0%B5%D1%82%D0%B8%D0%BD%20%2003%20-%2007%20%D0%BD%D0%BE%D0%B5%D0%BC%D0%B2%D1%80%D0%B8%20NEW%202025.pdf"
 
-dams_table <- extract_tables(dams, col_names = F, method = "stream", pages = c(3:5)) %>% 
-  pluck(1) %>% as_tibble()
+table <- extract_tables(link, col_names = F, method = "stream", pages = 1, output = "tibble") %>% pluck(1) %>% 
+  drop_na() %>% 
+  separate_wider_delim(cols = X5, names = c("X5", "X5_1"), delim = " ") %>% 
+  separate_wider_delim(cols = X7, names = c("X7", "X7_1"), delim = " ") %>%
+  separate_wider_delim(cols = X8, names = c("X8", "X8_1", "X9", "X9_1", "X10", "X10_1", 
+                                            "X11", "X11_1", "X12"), delim = " ") %>% 
+  select(product = X1, unit = X2, "2025-11-03" = X4, "2025-11-04" = X6, "2025-11-05" = X8, 
+         "2025-11-06" = X9_1, "2025-11-07" = X11) %>% 
+  mutate(product = fct_recode(product, 'Брашно тип "500" /пакет 1 кг/' = "/пакет 1 кг/",
+                              "Олио /пластмасова бутилка1л/" = "/пластмасова бутилка1л/",
+                              "Кисело мляко 3 и над 3% кофичка 400 г" = "кофичка 400 г",
+                              "Прясно мляко 3% кутия/бутилка 1 л" = "кутия/бутилка 1 л",
+                              "Колбаси малотрайни /в т.ч. шунка/" = "малотрайни /в т.ч. шунка/")) %>% 
+  pivot_longer(-c(product, unit)) %>%
+  mutate(unit = str_remove(unit, ","), date = as.Date(name), value = str_replace(value, ",", "."),
+         price = as.numeric(value)) %>% 
+  select(product, unit, date, price)
+
+df_market <- read_parquet("~/Desktop/R/shiny/bgprices/df_market.parquet")
+df_market <- bind_rows(df_market, table)
+
+write_parquet(df_market, "~/Desktop/R/shiny/bgprices/df_market.parquet")
+
+df_market %>% count(date) %>% view
+
+table %>% print(n = Inf)
 
 extr_tables_page_1 <- function(links) {
   

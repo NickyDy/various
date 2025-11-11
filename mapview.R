@@ -69,9 +69,10 @@ ptp_map %>%
   mapview(label = ptp_map$type, zcol = "died", color = c("black", "red"),
           legend = T, col.regions = c("black", "red"), cex = 3)
 
-sett_elev %>% mutate(text = fct_relevel(text, "0 - 49 вкл.", "50 - 99 вкл.", "100 - 199 вкл.", "200 - 299 вкл.",
-                                        "300 - 499 вкл.", "500 - 699 вкл.", "700 - 999 вкл.", "1000 и повече",
-                                        "NA")) %>% 
+sett_elev %>% 
+  mutate(text = fct_relevel(text, "0 - 49 вкл.", "50 - 99 вкл.", "100 - 199 вкл.", "200 - 299 вкл.",
+                                  "300 - 499 вкл.", "500 - 699 вкл.", "700 - 999 вкл.", "1000 и повече",
+                                  "NA")) %>% 
   mapview(color = "blue", zcol = "text",
                     label = sett_elev$text, lwd = 1,
                     legend = T, col.regions = colors, 
