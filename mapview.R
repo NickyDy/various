@@ -1,7 +1,7 @@
 library(tidyverse)
 library(mapview)
 library(sf)
-library(jsonlite)
+library(jsonlite) 
 mapviewOptions(basemaps = c("OpenStreetMap", "Esri.WorldImagery"), fgb = F)
 
 #library(tidygeocoder)
