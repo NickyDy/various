@@ -1,7 +1,8 @@
 library(tidyverse)
 library(mapview)
 library(sf)
-library(jsonlite) 
+library(jsonlite)
+
 mapviewOptions(basemaps = c("OpenStreetMap", "Esri.WorldImagery"), fgb = F)
 
 #library(tidygeocoder)
@@ -13,14 +14,17 @@ map <- st_read("data/obsh_map.gpkg")
 zt <- st_read("data/zt.gpkg")
 nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
-ptp <- read_csv2("various/mrv_database_done.csv") %>% 
-  rename(lat = y, long = x) %>% 
-  mutate(date = dmy(date),
-         month = month(date),
-         day = day(date),
-         lat = case_when(lat > 100 ~ lat / 1000, .default = lat),
-         long = case_when(long > 100 ~ long / 1000, .default = long)) %>% 
-  drop_na(lat, long)
+
+# ptp <- read_delim("various/mrv_database_done.csv") %>% 
+#   rename(lat = y, long = x) %>% 
+#   mutate(date = dmy(date),
+#          month = month(date),
+#          day = day(date),
+#          lat = case_when(lat > 100 ~ lat / 100000, .default = lat),
+#          long = case_when(long > 100 ~ long / 100000, .default = long)) %>% 
+#   drop_na(lat, long)
+# ptp <- st_read("various/PTP_Analysis_FINAL/PTP_Layer.shp") %>% 
+#   rename(lat = y, long = x)
 #----------------------------
 all_places <- st_read("data/maps/all_places.geojson")
 
@@ -52,22 +56,6 @@ all_places %>%
 
 glimpse(ptp)
 ptp %>% map_dfr(~ sum(is.na(.)))
-
-ptp_map <- ptp %>%
-  filter(
-    #date == "2025-03-31",
-    year %in% c(2025), 
-    month %in% c(3), 
-    day %in% c(31)
-    #type == "",
-    #died == "да",
-    #injured == "да"
-  )
-
-ptp_map %>% 
-  st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>% 
-  mapview(label = ptp_map$type, zcol = "died", color = c("black", "red"),
-          legend = T, col.regions = c("black", "red"), cex = 3)
 
 sett_elev %>% 
   mutate(text = fct_relevel(text, "0 - 49 вкл.", "50 - 99 вкл.", "100 - 199 вкл.", "200 - 299 вкл.",
@@ -121,35 +109,18 @@ und_water %>%
   mapview(legend = F, zcol = "site_name", cex = 3, label = und_water$site_name,
           col.regions = "red", color = "red")
 
-mapView(
-  x,
-  map = NULL,
-  pane = "auto",
-  canvas = useCanvas(x),
-  viewer.suppress = mapviewGetOption("viewer.suppress"),
-  zcol = NULL,
-  burst = FALSE,
-  color = mapviewGetOption("vector.palette"),
-  col.regions = mapviewGetOption("vector.palette"),
-  at = NULL,
-  na.color = mapviewGetOption("na.color"),
-  cex = 6,
-  lwd = lineWidth(x),
-  alpha = 0.9,
-  alpha.regions = regionOpacity(x),
-  na.alpha = regionOpacity(x),
-  map.types = mapviewGetOption("basemaps"),
-  verbose = mapviewGetOption("verbose"),
-  popup = TRUE,
-  layer.name = NULL,
-  label = zcol,
-  legend = mapviewGetOption("legend"),
-  legend.opacity = 1,
-  homebutton = mapviewGetOption("homebutton"),
-  native.crs = FALSE,
-  highlight = mapviewHighlightOptions(x, alpha.regions, alpha, lwd),
-  maxpoints = getMaxFeatures(x),
-  hide = FALSE,
-  ...
-)
-
+# ptp_map <- ptp %>%
+#   filter(
+#     date >= "2024-12-31",
+#     #year %in% c(2025), 
+#     #month %in% c(11), 
+#     #day %in% c(31)
+#     #type == "",
+#     #died == "да",
+#     #injured == "да"
+#   )
+# 
+# ptp_map %>% 
+#   st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>% 
+#   mapview(label = ptp_map$type, zcol = "died", color = c("black", "red"),
+#           legend = T, col.regions = c("black", "red"), cex = 3)
