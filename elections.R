@@ -89,7 +89,7 @@ votes %>%
 ggsave("312500046.png", width = 18, height = 10)
 
 votes %>%
-  #filter(oblast == "Пловдив град") %>% 
+  filter(oblast == "София - област") %>% 
   mutate(vote_date = fct_relevel(vote_date,
                                  "Октомври_2024",
                                  "Юни_2024",
