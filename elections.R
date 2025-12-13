@@ -6,7 +6,7 @@ library(tidytext)
 #library(readxl)
 glimpse(votes)
 
-votes <- read_rds("shiny/elections/votes_new.rds")
+votes <- read_rds("shiny/elections/votes_new.rds") %>% filter(!vote_date == "Март_2017")
 mand <- read_rds("shiny/elections/mand.rds")
 activity <- read_rds("shiny/elections/activity.rds")
 obsh_map <- st_read("data/obsh_map.gpkg")

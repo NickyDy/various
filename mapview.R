@@ -96,8 +96,8 @@ zt %>% select(type, name, geom) %>%
 za %>% st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>% 
   mapview(legend = F, col.regions = "red", color = "red")
 
-sett %>% select(-contains) %>% 
-  mapview(legend = F, zcol = "nuts4", col.regions = "white", alpha.regions = 0, color = "blue")
+sett %>% 
+  mapview(legend = F, zcol = "sett_name", col.regions = "white", alpha.regions = 0, color = "blue")
 glimpse(und_water)
 
 und_water <- read_rds("shiny/und_water/underground_water.rds") %>% 

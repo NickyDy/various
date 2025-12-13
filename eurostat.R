@@ -1,6 +1,6 @@
 library(tidyverse)
 library(eurostat)
-library(tidytext)
+library(nanoparquet)
 #library(ggrepel)
 #library(readxl)
 #library(jsonlite)
@@ -29,8 +29,8 @@ glimpse(export)
 #-------------------------------------------------------------------------
 write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
 
-write_rds(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.rds")
-write_rds(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.rds")
+write_parquet(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.parquet")
+write_parquet(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.parquet")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
