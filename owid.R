@@ -84,9 +84,9 @@ covid %>%
   theme(text = element_text(size = 16), legend.position = "top") +
   facet_wrap(~ name, scales = "free_y", ncol = 1)
 
-covid %>% 
+covid %>% filter(str_detect(date, "2025")) %>%
   filter(country %in% c("Bulgaria", "Sweden", "Denmark", "Ireland")) %>% 
-  ggplot(aes(date, excess_mortality)) +
+  ggplot(aes(date, total_boosters)) +
   geom_point() +
   geom_line() +
   scale_y_continuous(n.breaks = 5) +

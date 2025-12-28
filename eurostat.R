@@ -17,8 +17,11 @@ toc <- get_eurostat_toc() %>%
 	filter(type %in% c("table", "dataset")) %>% 
 	distinct()
 
-prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", 
-                            time_format = "date", stringsAsFactors = T)
+prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", time_format = "date", stringsAsFactors = T) %>% 
+  filter(TIME_PERIOD >= "2000-01-01")
+
+sts_inpr_m <- get_eurostat("sts_inpr_m", type = "code", time_format = "date", stringsAsFactors = T) %>% 
+  filter(TIME_PERIOD >= "2000-01-01", nace_r2 == "C", s_adj == "SCA", unit == "PCH_PRE")
 
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
   janitor::clean_names() %>% 
@@ -30,7 +33,7 @@ glimpse(export)
 write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
 
 write_parquet(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.parquet")
-write_parquet(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.parquet")
+write_parquet(sts_inpr_m, "shiny/eurostat/sts_inpr_m.parquet")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
@@ -180,9 +183,11 @@ df %>% drop_na() %>%
   labs(y = "Минимална месечна заплата (Евро)", x = "Цена на електричеството (kWh)") +
   theme(text = element_text(size = 16))
 
+nrg_cb_pem <- get_eurostat("nrg_cb_pem", type = "label", time_format = "date", stringsAsFactors = T)
+
 nrg_cb_pem %>%
   filter(!str_detect(geo, "^Euro"),
-         TIME_PERIOD == "2025-07-01", unit == "Percentage",
+         TIME_PERIOD == "2025-09-01", unit == "Percentage",
          siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
                      "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
                      "Wind", "Solar"),

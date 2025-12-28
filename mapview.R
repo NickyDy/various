@@ -14,17 +14,6 @@ map <- st_read("data/obsh_map.gpkg")
 zt <- st_read("data/zt.gpkg")
 nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
-
-# ptp <- read_delim("various/mrv_database_done.csv") %>% 
-#   rename(lat = y, long = x) %>% 
-#   mutate(date = dmy(date),
-#          month = month(date),
-#          day = day(date),
-#          lat = case_when(lat > 100 ~ lat / 100000, .default = lat),
-#          long = case_when(long > 100 ~ long / 100000, .default = long)) %>% 
-#   drop_na(lat, long)
-# ptp <- st_read("various/PTP_Analysis_FINAL/PTP_Layer.shp") %>% 
-#   rename(lat = y, long = x)
 #----------------------------
 all_places <- st_read("data/maps/all_places.geojson")
 
@@ -108,19 +97,34 @@ und_water %>%
   st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>% 
   mapview(legend = F, zcol = "site_name", cex = 3, label = und_water$site_name,
           col.regions = "red", color = "red")
+#--------------------------------------------
+ptp <- st_read("data/ptp.geojson")
 
-# ptp_map <- ptp %>%
-#   filter(
-#     date >= "2024-12-31",
-#     #year %in% c(2025), 
-#     #month %in% c(11), 
-#     #day %in% c(31)
-#     #type == "",
-#     #died == "да",
-#     #injured == "да"
-#   )
-# 
-# ptp_map %>% 
-#   st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>% 
-#   mapview(label = ptp_map$type, zcol = "died", color = c("black", "red"),
-#           legend = T, col.regions = c("black", "red"), cex = 3)
+ptp_map <- ptp %>%
+  filter(
+    date >= "2024-12-31",
+    #year %in% c(2025),
+    #month %in% c(11),
+    #day %in% c(31)
+    #type == "",
+    died == "да",
+    #injured == "да"
+  )
+
+ptp_map %>%
+  #st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>%
+  mapview(label = ptp_map$type, zcol = "died", legend = T, cex = 4,
+          col.regions = c("black", "red"), color = c("black", "red"))
+
+# ptp <- read_delim("various/mrv_database_done.csv") %>% 
+#   rename(lat = y, long = x) %>% 
+#   mutate(date = dmy(date),
+#          month = month(date),
+#          day = day(date),
+#          lat = case_when(lat > 100 ~ lat / 100000, .default = lat),
+#          long = case_when(long > 100 ~ long / 100000, .default = long)) %>% 
+#   drop_na(lat, long)
+# ptp <- st_read("PTP_Analysis_FINAL/PTP_Layer.shp") %>%
+#   filter(!c(x == 0 | y == 0)) %>% 
+#   select(date, type, injured, died, hour_int, geometry)
+# st_write(ptp, "data/ptp.geojson")

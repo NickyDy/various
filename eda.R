@@ -1,8 +1,7 @@
 library(tidyverse)
 library(tidytext)
 library(DataExplorer)
-# library(GGally)
-# library(DataExplorer)
+library(GGally)
 # library(performance)
 # library(tidymodels)
 
