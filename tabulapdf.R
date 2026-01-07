@@ -2,17 +2,19 @@ library(tidyverse)
 library(tabulapdf)
 library(nanoparquet)
 
-link <- "https://www.dksbt.bg/doc/%D0%A1%D0%B5%D0%B4%D0%BC%D0%B8%D1%87%D0%B5%D0%BD%20%D0%B1%D1%8E%D0%BB%D0%B5%D1%82%D0%B8%D0%BD%20%2015%20-%2019%20%D0%B4%D0%B5%D0%BA%D0%B5%D0%BC%D0%B2%D1%80%D0%B8%20NEW%202025.pdf"
+link <- "https://www.dksbt.bg/doc/%D0%A1%D0%B5%D0%B4%D0%BC%D0%B8%D1%87%D0%B5%D0%BD%20%D0%B1%D1%8E%D0%BB%D0%B5%D1%82%D0%B8%D0%BD%20%2022%20-%2030%20%D0%B4%D0%B5%D0%BA%D0%B5%D0%BC%D0%B2%D1%80%D0%B8%20NEW%202025.pdf"
 
 table <- extract_tables(link, col_names = F, method = "stream", pages = 1, output = "tibble") %>% pluck(1) %>% 
   drop_na() %>% 
   separate_wider_delim(cols = X5, names = c("X5", "X5_1"), delim = " ") %>% 
-  separate_wider_delim(cols = X7, names = c("X7", "X7_1"), delim = " ") %>%
-  separate_wider_delim(cols = X8, names = c("X8", "X8_1", "X8_2"), delim = " ") %>%
-  separate_wider_delim(cols = X10, names = c("X10", "X10_1"), delim = " ") %>% 
-  separate_wider_delim(cols = X12, names = c("X12", "X12_1"), delim = " ") %>% 
-  select(product = X1, unit = X2, "2025-12-15" = X4, "2025-12-16" = X6, "2025-12-17" = X8, 
-         "2025-12-18" = X9, "2025-12-19" = X11) %>% 
+  separate_wider_delim(cols = X7, names = c("X7", "X7_1", "X7_2", "X7_3", "X7_4", "X7_5", "X7_6", "X7_7"), delim = " ") %>%
+  # separate_wider_delim(cols = X8, names = c("X8", "X8_1", "X8_2"), delim = " ") %>%
+  # separate_wider_delim(cols = X10, names = c("X10", "X10_1"), delim = " ") %>% 
+  # separate_wider_delim(cols = X12, names = c("X12", "X12_1"), delim = " ") %>% 
+  select(product = X1, unit = X2, "2025-12-22" = X4, "2025-12-23" = X6, "2025-12-29" = X7_2, 
+         "2025-12-30" = X7_5, 
+         #"2025-12-26" = X11
+         ) %>% 
   mutate(product = fct_recode(product, 'Брашно тип "500" /пакет 1 кг/' = "/пакет 1 кг/",
                               "Олио /пластмасова бутилка1л/" = "/пластмасова бутилка1л/",
                               "Кисело мляко 3 и над 3% кофичка 400 г" = "кофичка 400 г",
@@ -23,10 +25,10 @@ table <- extract_tables(link, col_names = F, method = "stream", pages = 1, outpu
          price = as.numeric(value)) %>% 
   select(product, unit, date, price)
 
-df_market <- read_parquet("~/Desktop/R/shiny/bgprices/df_market.parquet")
+df_market <- read_parquet("~/Desktop/R/shiny/markets/df_market.parquet")
 df_market <- bind_rows(df_market, table)
 
-write_parquet(df_market, "~/Desktop/R/shiny/bgprices/df_market.parquet")
+write_parquet(df_market, "~/Desktop/R/shiny/markets/df_market.parquet")
 
 df_market %>% count(date) %>% view
 

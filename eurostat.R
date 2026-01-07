@@ -33,7 +33,7 @@ glimpse(export)
 write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
 
 write_parquet(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.parquet")
-write_parquet(sts_inpr_m, "shiny/eurostat/sts_inpr_m.parquet")
+write_parquet(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.parquet")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
