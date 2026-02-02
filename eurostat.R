@@ -187,7 +187,7 @@ nrg_cb_pem <- get_eurostat("nrg_cb_pem", type = "label", time_format = "date", s
 
 nrg_cb_pem %>%
   filter(!str_detect(geo, "^Euro"),
-         TIME_PERIOD == "2025-09-01", unit == "Percentage",
+         TIME_PERIOD == "2025-10-01", unit == "Percentage",
          siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
                      "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
                      "Wind", "Solar"),
