@@ -30,7 +30,9 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
 glimpse(export)
 #-------------------------------------------------------------------------
-write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
+nama_10_gdp <- get_eurostat("nama_10_gdp", type = "label", time_format = "date", stringsAsFactors = T)
+
+write_rds(nama_10_gdp, "shiny/eurostat/nama_10_gdp.rds")
 
 write_parquet(prc_hicp_mmor, "shiny/inflation/prc_hicp_mmor.parquet")
 write_parquet(prc_hicp_mmor, "shiny/eurostat/prc_hicp_mmor.parquet")
