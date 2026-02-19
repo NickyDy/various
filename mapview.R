@@ -14,6 +14,9 @@ map <- st_read("data/obsh_map.gpkg")
 zt <- st_read("data/zt.gpkg")
 nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
+
+geo_boundaries <- fromJSON("https://www.geoboundaries.org/api/current/gbOpen/DEU/ADM1/")
+geo_json <- read_sf(geo_boundaries[["simplifiedGeometryGeoJSON"]])
 #----------------------------
 all_places <- st_read("data/maps/all_places.geojson")
 
@@ -37,6 +40,10 @@ elev <- ekatte %>% select(ekatte, text)
 sett_elev <- sett %>% left_join(elev, by = "ekatte")
 
 colors <- c('#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#990000')
+#-----------------------------------------------------------------------------
+geo_json %>% 
+  mapview(legend = F, zcol = "shapeName", lwd = 2,
+          col.regions = "white", alpha.regions = 0, color = "blue")
 
 df5 %>% mapview(zcol = "Name", legend = F, color = "red", col.regions = "red")
 

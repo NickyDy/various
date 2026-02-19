@@ -1,14 +1,7 @@
 library(tidyverse)
 library(jsonlite)
+library(nanoparquet)
 
-tr_02_05_2025 <- fromJSON("https://data.egov.bg/resource/download/e404608f-670b-4cd9-9082-5546f62071c8/json")
-tr_03_05_2025 <- fromJSON("https://data.egov.bg/resource/download/6fdb35f6-4733-468f-939f-a99b89efa07a/json")
-tr_01_05_2025 <- fromJSON("https://data.egov.bg/resource/download/7e4f2e6c-53e5-4c9d-aace-b67bc26cc798/json")
+json <- fromJSON(glue::glue("https://archive-api.open-meteo.com/v1/archive?latitude={coord$lat}&longitude={coord$long}&start_date=1940-01-01&end_date={Sys.Date()}&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum,rain_sum,snowfall_sum,wind_speed_10m_max,wind_direction_10m_dominant&timezone=auto"))
 
-df_may_02 <- tr_02_05_2025[["Message"]][["Body"]][[1]][["Deeds"]][[1]][["Deed"]][[1]][["$"]] %>% as_tibble()
-df_may_03 <- tr_03_05_2025[["Message"]][["Body"]][[1]][["Deeds"]][[1]][["Deed"]][[1]][["$"]] %>% as_tibble()
-df_may_01 <- tr_01_05_2025[["Message"]][["Body"]][[1]][["Deeds"]][[1]][["Deed"]][[1]][["$"]] %>% as_tibble()
 
-df <- bind_rows(df_may_02, df_may_03, df_may_01) %>% distinct()
-
-  

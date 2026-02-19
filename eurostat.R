@@ -212,7 +212,8 @@ nrg_cb_pem %>%
   scale_x_continuous(expand = expansion(mult = c(0.01, 0.4))) +
   theme(text = element_text(size = 16), axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) +
-  labs(x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL, title = "Енергиен микс към октомври, 2025 г.",
+       caption = "Източник на данните: Евростат") +
   facet_wrap(vars(geo))
 
 hlth_cd_aro %>% 
