@@ -6,7 +6,7 @@ library(tidytext)
 #library(readxl)
 glimpse(votes)
 
-votes <- read_rds("shiny/elections/votes_new.rds") %>% filter(!vote_date == "Март_2017")
+votes <- read_rds("shiny/elections/votes.rds")
 mand <- read_rds("shiny/elections/mand.rds")
 activity <- read_rds("shiny/elections/activity.rds")
 obsh_map <- st_read("data/obsh_map.gpkg")
@@ -17,8 +17,9 @@ write_rds(votes, "shiny/elections/votes.rds")
 write_rds(mand, "shiny/elections/mand.rds")
 write_rds(activity, "shiny/elections/activity.rds")
 
-glimpse(oct_2024)
-oct_2024 %>% map_dfr(~ sum(is.na(.))) %>% View()
+glimpse(votes)
+votes %>% count(oblast, obshtina) %>% view
+votes %>% map_dfr(~ sum(is.na(.))) %>% View()
 #-----------------------------------------
 colors <- c(
   "ПП" = "yellow",
@@ -55,7 +56,7 @@ space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "",
 }
 #--------------------------------------------------------
 votes %>%
-  filter(code == "143200140") %>%
+  filter(oblast == "Извън страната") %>%
   mutate(vote_date = fct_relevel(vote_date,
                                  "Октомври_2024",
                                  "Юни_2024",
@@ -65,9 +66,8 @@ votes %>%
   															 "Юли_2021", 
   															 "Април_2021", 
   															 "Март_2017")) %>%
-  group_by(vote_date, party) %>%
-  summarise(sum_votes = sum(votes)) %>%
-  filter(sum_votes >= 1) %>%
+  summarise(sum_votes = sum(votes), .by = c(vote_date, party)) %>%
+  filter(sum_votes >= 1000) %>%
   mutate(party = fct_reorder(party, sum_votes)) %>%
   ggplot(aes(sum_votes, party)) +
   geom_col(aes(fill = party), position = "dodge", show.legend = F) +
@@ -89,7 +89,7 @@ votes %>%
 ggsave("312500046.png", width = 18, height = 10)
 
 votes %>%
-  filter(oblast == "София - област") %>% 
+  filter(code == "192700200") %>%
   mutate(vote_date = fct_relevel(vote_date,
                                  "Октомври_2024",
                                  "Юни_2024",
@@ -99,8 +99,8 @@ votes %>%
   															 "Юли_2021", 
   															 "Април_2021", 
   															 "Март_2017")) %>%
-  group_by(vote_date, party) %>%
-  summarise(sum_votes = sum(votes, na.rm = T)) %>%
+  summarise(sum_votes = sum(votes, na.rm = T), .by = c(vote_date, party)) %>%
+  group_by(vote_date) %>%
   mutate(prop = sum_votes / sum(sum_votes)) %>%
   mutate(party = fct_reorder(party, sum_votes)) %>%
   filter(prop >= 0.01) %>%
@@ -111,7 +111,7 @@ votes %>%
 	scale_y_discrete(labels = scales::label_wrap(50)) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = scales::percent(prop, accuracy = 0.01)),
-    position = position_dodge(width = 1), hjust = -0.1, size = 16, size.unit = "pt") +
+    position = position_dodge(width = 1), hjust = -0.1, size = 12, size.unit = "pt") +
   theme(text = element_text(size = 16), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank()) +

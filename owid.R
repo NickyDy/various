@@ -16,7 +16,7 @@ colors <- c("Биогориво" = "green", "Въглища" = "black",
             "Ядрена" = "red", "Нефт" = "brown",
             "Слънце" = "orange", "Вятър" = "skyblue")
 
-glimpse(energy)
+glimpse(covid)
 
 energy %>% count(year) %>% pull(year)
 
@@ -84,12 +84,11 @@ covid %>%
   theme(text = element_text(size = 16), legend.position = "top") +
   facet_wrap(~ name, scales = "free_y", ncol = 1)
 
-covid %>% filter(str_detect(date, "2025")) %>%
-  filter(country %in% c("Bulgaria", "Sweden", "Denmark", "Ireland")) %>% 
-  ggplot(aes(date, total_boosters)) +
+covid %>% 
+  filter(date > "2025-01-01", continent == "Europe") %>%
+  ggplot(aes(date, total_vaccinations)) +
   geom_point() +
   geom_line() +
-  scale_y_continuous(n.breaks = 5) +
   labs(x = "Години", y = "Нови случаи на COVID", caption = "Източник на данните: OWID") +
   theme(text = element_text(size = 16)) +
   facet_wrap(~ country)
