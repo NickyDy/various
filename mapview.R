@@ -14,6 +14,7 @@ map <- st_read("data/obsh_map.gpkg")
 zt <- st_read("data/zt.gpkg")
 nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
+topch <- st_read("data/topchiq_project.geojson")
 
 json <- fromJSON(glue::glue("https://www.geoboundaries.org/api/current/gbOpen/BGR/ADM2/"))
 df <- read_sf(json[["simplifiedGeometryGeoJSON"]])
@@ -29,7 +30,7 @@ df5 <- st_read("data/maps/Way points - Dissertation and Diploma.kmz", layer = "W
 df6 <- st_read("data/maps/София - Самоков - София.kmz", layer = "tracks")
 df7 <- st_read("data/maps/Скалица - 3-ти август, 2014.kmz", layer = "tracks")
 
-st_layers("data/maps/Скалица - 3-ти август, 2014.kmz")
+st_layers("~/Downloads/Topchiq_map.gdb")
 #-----------------------------------------
 oblasti <- st_read("data/oblasti.geojson")
 obshtini <- st_read("data/obshtini.geojson")
@@ -42,9 +43,9 @@ sett_elev <- sett %>% left_join(elev, by = "ekatte")
 
 colors <- c('#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#990000')
 #-----------------------------------------------------------------------------
-df %>% 
-  mapview(legend = F, zcol = "shapeName", lwd = 2,
-          col.regions = "white", alpha.regions = 0, color = "blue")
+topch %>% 
+  mapview(legend = F, zcol = "name", lwd = 2,
+          col.regions = "white", alpha.regions = 0, color = "white")
 
 df5 %>% mapview(zcol = "Name", legend = F, color = "red", col.regions = "red")
 

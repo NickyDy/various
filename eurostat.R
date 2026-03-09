@@ -1,14 +1,7 @@
 library(tidyverse)
 library(eurostat)
 library(nanoparquet)
-#library(ggrepel)
-#library(readxl)
-#library(jsonlite)
-#library(scales)
-# library(rnaturalearth)
-# library(rnaturalearthdata)
-# library(sf)
-# library(patchwork)
+
 options(scipen = 100)
 
 toc <- get_eurostat_toc() %>% 
