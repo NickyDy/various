@@ -1,5 +1,51 @@
 library(tidyverse)
 library(httr2)
+library(tidygeocoder)
+
+coord <- tibble(city = "phnom penh") %>% 
+  geocode(city, method = "osm")
+
+req <- request("https://archive-api.open-meteo.com/v1/archive") |>
+  req_url_query(
+    latitude = coord$lat,
+    longitude = coord$long,
+    start_date = "1940-01-01",
+    end_date = Sys.Date(),
+    daily = paste(
+      c(
+        "temperature_2m_mean",
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_sum",
+        "rain_sum",
+        "snowfall_sum",
+        "wind_speed_10m_max",
+        "wind_direction_10m_dominant"
+      ),
+      collapse = ","
+    ),
+    timezone = "auto"
+  ) |>
+  req_perform()
+
+glimpse(df)
+
+df <- resp_body_json(req, simplifyVector = T) %>% 
+  pluck("daily") %>% as_tibble() %>% 
+  mutate(date = ymd(time), 
+         year = factor(year(date)),
+         month = factor(month(date)),
+         day = factor(day(date)),
+         decade = case_when(
+           year %in% c(1940:1949) ~ "1940-те",
+           year %in% c(1950:1959) ~ "1950-те",
+           year %in% c(1960:1969) ~ "1960-те",
+           year %in% c(1970:1979) ~ "1970-те",
+           year %in% c(1980:1989) ~ "1980-те",
+           year %in% c(1990:1999) ~ "1990-те",
+           year %in% c(2000:2009) ~ "2000-те",
+           year %in% c(2010:2019) ~ "2010-те",
+           year %in% c(2020:2029) ~ "2020-те"))
 
 beef_carc_new <- request("https://www.ec.europa.eu/agrifood/api") %>% 
   req_url_path_append("beef/prices") %>% 
