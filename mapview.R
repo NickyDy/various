@@ -16,7 +16,7 @@ nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
 topch <- st_read("data/topchiq_project.geojson")
 
-json <- fromJSON(glue::glue("https://www.geoboundaries.org/api/current/gbOpen/BGR/ADM2/"))
+json <- fromJSON(glue::glue("https://www.geoboundaries.org/api/current/gbOpen/ITA/ADM2/"))
 df <- read_sf(json[["simplifiedGeometryGeoJSON"]])
 dframe <- bind_rows(bgr_json, cze_json)
 #----------------------------
@@ -43,16 +43,16 @@ sett_elev <- sett %>% left_join(elev, by = "ekatte")
 
 colors <- c('#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#990000')
 #-----------------------------------------------------------------------------
-topch %>% 
-  mapview(legend = F, zcol = "name", lwd = 2,
+df %>% 
+  mapview(legend = F, zcol = "shapeName", lwd = 2,
           col.regions = "white", alpha.regions = 0, color = "white")
 
-df5 %>% mapview(zcol = "Name", legend = F, color = "red", col.regions = "red")
+df %>% mapview(zcol = "shapeName", legend = F, color = "red", col.regions = "red")
 
 all_places %>% 
   mapview(zcol = "name", legend = F, color = "red", col.regions = "red")
 
-glimpse(ptp)
+glimpse(df)
 ptp %>% map_dfr(~ sum(is.na(.)))
 
 sett_elev %>% 

@@ -1,7 +1,8 @@
 library(tidyverse)
 library(scales)
 library(tidytext)
-#library(sf)
+library(sf)
+library(mapview)
 #library(geodata)
 #library(readxl)
 glimpse(votes)
@@ -11,6 +12,8 @@ mand <- read_rds("shiny/elections/mand.rds")
 activity <- read_rds("shiny/elections/activity.rds")
 obsh_map <- st_read("data/obsh_map.gpkg")
 obl_map <- st_read("data/obl_map.gpkg")
+sett_map <- st_read("data/settlements.geojson")
+
 bg_map <- gadm("BGR", level = 0, path = tempdir())
 
 write_rds(votes, "shiny/elections/votes.rds")
@@ -249,30 +252,41 @@ votes %>%
 
 # Maps-------------------------------------------------
 db <- votes %>%
-  group_by(vote_date, obshtina, party) %>%
-  summarise(sum_party = sum(votes)) %>%
-  group_by(vote_date, obshtina) %>%
+  summarise(sum_party = sum(votes), .by = c(vote_date, section, party)) %>%
+  group_by(vote_date, section) %>%
   mutate(sum_obshtina = sum(sum_party), 
   					perc = sum_party / sum_obshtina * 100) %>%
+  mutate(section = str_remove(section, "^гр.|с.")) %>% 
   filter(party %in% c("ДПС-НH"))
-map <- obsh_map %>% 
-  left_join(db, by = c("obshtina_bg" = "obshtina")) %>%
+map <- sett_map %>% 
+  left_join(db, by = c("sett_name" = "section")) %>%
   mutate_if(is.numeric, round, 1) %>%
   filter(vote_date %in% c("Октомври_2024")) %>%
   mutate(party = fct_reorder(party, perc))
+
+colors <- c('#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#990000')
+pal = mapviewPalette("mapviewTopoColors")
+mapviewOptions(basemaps = c("OpenStreetMap"), fgb = F)
+
 map %>% 
+  mapview(color = "blue", zcol = "perc",
+        label = paste0(map$sett_name, " ", map$perc, " (%)"), lwd = 1,
+        legend = F, col.regions = colors, 
+        alpha.regions = 0.5)
+
+map %>% 
+  filter(nuts3 == "JAM") %>% 
   ggplot() +
   geom_sf(aes(fill = perc), alpha = .4) +
-  geom_sf_text(aes(label = perc), 
+  geom_sf_text(aes(label = perc),
   						 check_overlap = TRUE, size = 3) +
-  geom_sf_text(aes(label = obshtina_bg), 
-  						 check_overlap = TRUE, size = 2, vjust = -1.5) +
+  geom_sf_text(aes(label = sett_name),
+  						 check_overlap = TRUE, size = 2.5, vjust = -1.5) +
   theme(text = element_text(size = 16), legend.position = "right",
     axis.text = element_blank(),
     axis.ticks = element_blank()) +
-  labs(x = NULL, y = NULL, fill = "(%)", 
-       title = "Вот за ДПС–НН по общини на последните избори (октомври, 2024 г.)") +
-  scale_fill_gradient(low = "white", high = "purple")
+  labs(x = NULL, y = NULL, fill = "(%)", title = NULL) +
+  scale_fill_gradient(low = "white", high = "red")
 #+ annotation_scale(location = "br", width_hint = 0.2, text_cex = 1.1) +
 # annotation_north_arrow(location = "tr", which_north = "true",
 # pad_x = unit(0, "in"), pad_y = unit(0.3, "in"),

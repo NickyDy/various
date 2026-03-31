@@ -2,7 +2,7 @@ library(tidyverse)
 library(httr2)
 library(tidygeocoder)
 
-coord <- tibble(city = "phnom penh") %>% 
+coord <- tibble(city = "yambol") %>% 
   geocode(city, method = "osm")
 
 req <- request("https://archive-api.open-meteo.com/v1/archive") |>
