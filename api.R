@@ -5,30 +5,28 @@ library(tidygeocoder)
 coord <- tibble(city = "yambol") %>% 
   geocode(city, method = "osm")
 
-req <- request("https://archive-api.open-meteo.com/v1/archive") |>
+req <- request("https://api.open-meteo.com/v1/forecast") |>
   req_url_query(
     latitude = coord$lat,
     longitude = coord$long,
-    start_date = "1940-01-01",
-    end_date = Sys.Date(),
     daily = paste(
       c(
         "temperature_2m_mean",
         "temperature_2m_max",
         "temperature_2m_min",
-        "precipitation_sum",
         "rain_sum",
         "snowfall_sum",
         "wind_speed_10m_max",
-        "wind_direction_10m_dominant"
+        "wind_direction_10m_dominant",
+        "cloud_cover_mean"
       ),
       collapse = ","
     ),
-    timezone = "auto"
+    timezone = "auto",
+    wind_speed_unit = "ms",
+    forecast_days= "10"
   ) |>
   req_perform()
-
-glimpse(df)
 
 df <- resp_body_json(req, simplifyVector = T) %>% 
   pluck("daily") %>% as_tibble() %>% 
