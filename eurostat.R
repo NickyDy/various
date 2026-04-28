@@ -10,13 +10,11 @@ toc <- get_eurostat_toc() %>%
 	filter(type %in% c("table", "dataset")) %>% 
 	distinct()
 
-prc_hicp_mmor <- get_eurostat("prc_hicp_mmor", type = "label", time_format = "date", stringsAsFactors = T) %>% 
-  filter(TIME_PERIOD >= "2000-01-01")
-
 prc_hicp_minr <- get_eurostat("prc_hicp_minr", type = "label", time_format = "date", stringsAsFactors = T,
-                              filters = list(unit = "RCH_A", coicop18 = c("total", "cp01", "cp02", "cp03", "cp04",
+                              filters = list(unit = "RCH_M", coicop18 = c("total", "cp01", "cp02", "cp03", "cp04",
                                                                           "cp05", "cp06", "cp07", "cp08", "cp09",
                                                                           "cp10", "cp11", "cp12", "cp13")))
+prc_hicp_minr %>% count(time) %>% view
 
 sts_inpr_m <- get_eurostat("sts_inpr_m", type = "code", time_format = "date", stringsAsFactors = T) %>% 
   filter(TIME_PERIOD >= "2000-01-01", nace_r2 == "C", s_adj == "SCA", unit == "PCH_PRE")
@@ -28,9 +26,9 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
 glimpse(prc_hicp_minr)
 #-------------------------------------------------------------------------
-nama_10_gdp <- get_eurostat("nama_10_gdp", type = "label", time_format = "date", stringsAsFactors = T)
+tec00011 <- get_eurostat("tec00011", type = "label", time_format = "date", stringsAsFactors = T)
 
-write_rds(nama_10_gdp, "shiny/eurostat/nama_10_gdp.rds")
+write_rds(tec00011, "shiny/eurostat/tec00011.rds")
 
 write_parquet(prc_hicp_minr, "shiny/inflation/prc_hicp_minr.parquet")
 write_parquet(prc_hicp_minr, "shiny/eurostat/prc_hicp_minr.parquet")
