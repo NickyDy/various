@@ -5,9 +5,6 @@ library(jsonlite)
 
 mapviewOptions(basemaps = c("OpenStreetMap", "Esri.WorldImagery"), fgb = F)
 
-#library(tidygeocoder)
-#"Esri.WorldImagery", "OpenTopoMap"
-
 df <- tibble(address = c("Ямбол", "Бургас")) %>% 
   geocode(address, method = "osm")
 map <- st_read("data/obsh_map.gpkg")
@@ -107,22 +104,22 @@ und_water %>%
   mapview(legend = F, zcol = "site_name", cex = 3, label = und_water$site_name,
           col.regions = "red", color = "red")
 #--------------------------------------------
-ptp <- st_read("data/ptp.geojson")
+ptp <- st_read("data/ptp.gpkg")
 
 ptp_map <- ptp %>%
   filter(
-    date >= "2024-12-31",
+    date > "2024-12-31",
     #year %in% c(2025),
     #month %in% c(11),
     #day %in% c(31)
     #type == "",
-    died == "да",
+    #died == "не",
     #injured == "да"
   )
 
 ptp_map %>%
   #st_as_sf(coords = c("long", "lat"), crs = c(4326)) %>%
-  mapview(label = ptp_map$type, zcol = "died", legend = T, cex = 4,
+  mapview(label = ptp_map$type, zcol = "injured", legend = T, cex = 4,
           col.regions = c("black", "red"), color = c("black", "red"))
 
 # ptp <- read_delim("various/mrv_database_done.csv") %>% 

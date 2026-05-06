@@ -48,8 +48,7 @@ colors <- c(
   "АПС" = "purple",
   "МЕЧ" = "maroon",
   "БСП-ОЛ" = "red",
-  "ПБ" = "darkgreen",
-  "СИЯНИЕ" = "pink")
+  "ПБ" = "darkgreen")
 
 space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "", 
                      big.mark = " ", decimal.mark = ".", trim = TRUE, digits, 
@@ -64,9 +63,11 @@ space_s <- function (x, accuracy = NULL, scale = 1, prefix = "", suffix = "",
          trim = trim, ...)
 }
 #--------------------------------------------------------
-map(stolipinovo_pl, funk)
+map(fakulteta_sf, funk)
 
-sec <- "254619132"
+sec <- fakulteta_sf
+
+funk(sec)
 
 funk <- function(sec){
 votes_new %>%
@@ -90,8 +91,6 @@ votes_new %>%
   mutate(party = fct_reorder(party, sum_votes)) %>%
   ggplot(aes(sum_votes, party, fill = party)) +
   geom_col(show.legend = F) +
-  #guides(fill = guide_legend(reverse = TRUE)) +
-  #scale_y_discrete(labels = scales::label_wrap(50)) +
   scale_x_continuous(expand = expansion(mult = c(.05, .9))) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = space_s(sum_votes)), 
@@ -99,8 +98,7 @@ votes_new %>%
   theme(text = element_text(size = 12), 
   			axis.text.x = element_blank(), 
   			axis.ticks.x = element_blank(),
-  			strip.background = element_rect(fill = "black", color = "white"),
-  			strip.text = element_text(color = "white", face = "bold")) +
+  			strip.text = element_text(face = "bold")) +
   labs(y = NULL, x = "Брой гласове", title = paste0("Секция: ", sec),
        caption = "Източник на данните: ЦИК.") +
   facet_wrap(vote_date ~ paste0("Общо гласували: ", total), nrow = 1)
@@ -139,15 +137,15 @@ votes_new %>%
        caption = "Източник на данните: ЦИК.") +
   facet_wrap(~ vote_date, nrow = 1)
 
-votes %>% 
-  filter(vote_date %in% c("Октомври_2024", "Юни_2024")) %>% 
+votes_new %>% 
+  filter(vote_date %in% c("Април_2026", "Октомври_2024")) %>% 
   pivot_wider(names_from = vote_date, values_from = votes) %>%
-  mutate(abs_diff = abs(Октомври_2024 - Юни_2024)) %>%
+  mutate(abs_diff = abs(Април_2026 - Октомври_2024)) %>%
   summarise(volatility_index = sum(abs_diff, na.rm = T) / 2, 
             .by = c(oblast, obshtina, section, code)) %>%
   filter(!oblast == "Извън страната") %>% 
   arrange(-volatility_index) %>%
-  slice_head(n = 200) %>%
+  slice_head(n = 100) %>% view
   mutate(code = reorder_within(code, volatility_index, oblast)) %>%
   ggplot(aes(volatility_index, code, fill = oblast)) +
   geom_col(show.legend = F) +
@@ -159,8 +157,9 @@ votes %>%
   labs(y = "Секция", x = "Индекс на волатилност") +
   theme(axis.title = element_text(hjust = 1)) +
   facet_wrap(vars(oblast), scales = "free_y", nrow = 3)
-votes %>% 
-  filter(vote_date == "Октомври_2024",
+
+votes_new %>% 
+  filter(vote_date == "Април_2026",
          party %in% c("ВЕЛИЧИЕ", "ДПС-НH", "АПС", "МЕЧ",
                       "БСП-ОЛ", "ГЕРБ-СДС", "ПП-ДБ", "ВЪЗРАЖДАНЕ",
                       "ИТН")) %>% 
@@ -185,13 +184,13 @@ votes %>%
   scale_fill_manual(values = c("За еврото" = "blue", 
                                "Против еврото" = "red"))
 #-------------------------------------------------------
-votes %>% 
+votes_new %>% 
   #filter(party == "ДПС-НH", vote_date == "Октомври_2024") %>%
   mutate(party = fct_recode(party, "ДПС-НH" = "ДПС")) %>% 
-  filter(vote_date %in% c("Октомври_2024", "Юни_2024")) %>%
+  filter(vote_date %in% c("Април_2026", "Октомври_2024")) %>%
   pivot_wider(names_from = vote_date, values_from = votes) %>%
-  mutate(diff = Октомври_2024 / Юни_2024) %>%
-  filter(Юни_2024 > 2 & diff > 15) %>%
+  mutate(diff = Април_2026 / Октомври_2024) %>%
+  filter(Октомври_2024 > 2 & diff > 15) %>%
   unite("section_code", c("section", "code"), sep = " - ") %>% 
   mutate(section_code = reorder_within(section_code, diff, party)) %>%
   ggplot(aes(diff, section_code, fill = party)) +
@@ -202,7 +201,7 @@ votes %>%
   scale_x_continuous(expand = expansion(mult = c(.01, .2))) +
   geom_text(aes(label = diff), position = position_dodge(width = 1), hjust = -0.1, size = 3.5) +
   labs(x = "Брой гласове", y = "Населено място - секция", 
-       title = "Разлика в броя гласове на последните (октомври, 2024) в сравнение с предпоследните (юни, 2024) избори, получени от съответните партии.\nПоказани са само секции с повече от 15 пъти разлика.") +
+       title = "Разлика в броя гласове на последните (април, 2026) в сравнение с предпоследните (октомври, 2024) избори, получени от съответните партии.\nПоказани са само секции с повече от 15 пъти разлика.") +
   facet_wrap(vars(party), scales = "free_y", nrow = 1) +
   theme(text = element_text(size = 14))
   
@@ -213,44 +212,47 @@ votes %>%
   #   filter(Април_2023 < 50 & diff > 60) %>%
   #   unite("section_code", c("section", "code"), sep = "_")
 
-votes %>%
-  filter(vote_date %in% c("Юни_2024", "Април_2023")) %>%
-  pivot_wider(names_from = vote_date, values_from = votes) %>% 
-  summarise(april_sum = sum(Април_2023, na.rm = T),
-            june_sum = sum(Юни_2024, na.rm = T),
-            diff = june_sum - april_sum, .by = c(oblast, party)) %>%
-  filter(party %in% c("ИТН", "ПП-ДБ", "ГЕРБ-СДС", "ДПС", "ВЪЗРАЖДАНЕ", "БСП")) %>%
+votes_new %>%
+  filter(vote_date %in% c("Април_2026", "Октомври_2024")) %>%
+  pivot_wider(names_from = vote_date, values_from = votes) %>%
+  summarise(oct_sum = sum(Октомври_2024, na.rm = T),
+            apr_sum = sum(Април_2026, na.rm = T),
+            diff = apr_sum - oct_sum, .by = c(oblast, party)) %>%
+  filter(party %in% c("ПБ", "ИТН", "ПП-ДБ", "ГЕРБ-СДС", "ДПС", "ВЪЗРАЖДАНЕ", "БСП-ОЛ", "МЕЧ", "ВЕЛИЧИЕ", "АПС"),
+         #diff >= 4000 | diff <= -4000
+         ) %>%
   mutate(col = diff > 0, oblast = fct_rev(oblast),
          col = as.factor(col),
          col = fct_recode(col, "Загуба на гласове" = "FALSE",
                           "Печалба на гласове" = "TRUE"),
-         party = fct_relevel(party, "ГЕРБ-СДС", "ДПС", "ПП-ДБ", "ВЪЗРАЖДАНЕ", "БСП", "ИТН")) %>% 
+         party = fct_relevel(party, "ГЕРБ-СДС", "ДПС", "ПП-ДБ", "ВЪЗРАЖДАНЕ", "БСП-ОЛ", "ИТН")) %>%
   ggplot(aes(diff, oblast, fill = col)) +
   geom_col() +
-  geom_text(aes(label = space_s(diff)), 
-            position = position_dodge(width = 1), hjust = -0.05, size = 16, size.unit = "pt") +
+  geom_text(aes(label = space_s(diff)),
+            position = position_dodge(width = 1),
+            hjust = -0.05, size = 16, size.unit = "pt") +
   scale_fill_manual(values = c("red", "blue")) +
-  scale_x_continuous(expand = expansion(mult = c(.01, .3))) +
-  theme(text = element_text(size = 16), legend.position = "top", 
-        axis.text.x = element_blank(), 
+  scale_x_continuous(expand = expansion(mult = c(.01, .7))) +
+  theme(text = element_text(size = 16), legend.position = "top",
+        axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) +
   labs(y = NULL, x = "Брой гласове", fill = "Легенда:",
        title = "Загуба и печалба на гласове от основните партии на последните избори в сравнение с предпоследните:") +
-  facet_wrap(vars(party), ncol = 6)
+  facet_wrap(vars(party), nrow = 1)
 
-votes %>%
+votes_new %>%
   mutate(vote_date = fct_relevel(vote_date,
+                                 "Април_2026",
                                  "Юни_2024",
                                  "Април_2023",
                                  "Октомври_2022", 
                                  "Ноември_2021", 
                                  "Юли_2021", 
-                                 "Април_2021", 
-                                 "Март_2017")) %>%
+                                 "Април_2021")) %>%
   group_by(vote_date, party) %>%
   summarise(sum_votes = sum(votes)) %>%
   pivot_wider(names_from = vote_date, values_from = sum_votes) %>% 
-  mutate(diff = Април_2023 - Октомври_2022, party = fct_reorder(party, diff, .na_rm = T),
+  mutate(diff = Април_2026 - Юни_2024, party = fct_reorder(party, diff, .na_rm = T),
          col = diff > 0, col = as.factor(col),
          col = fct_recode(col, "Загуба на гласове" = "FALSE",
                           "Печалба на гласове" = "TRUE")) %>% 
@@ -320,58 +322,6 @@ map %>%
 # pad_x = unit(0, "in"), pad_y = unit(0.3, "in"),
 # style = north_arrow_fancy_orienteering)
 #----------------------------
-jan_2024 <- read_csv("https://data.egov.bg/resource/download/cea990e4-6805-45dc-b5aa-529a3d0b725b/csv",
-                     col_names = c("oblast", "obshtina", "sett", "Постоянен адрес", "Настоящ адрес"), skip = 1) %>% 
-  mutate(id = row_number(), .before = oblast)
-jan <- jan_2024 %>% pivot_longer(5:6, names_to = "address", values_to = "януари")
-
-feb_2024 <- read_csv("https://data.egov.bg/resource/download/99c7918d-277e-4d1c-b6b4-4886a44aa927/csv",
-                     col_names = c("oblast", "obshtina", "sett", "Постоянен адрес", "Настоящ адрес"), skip = 1) %>% 
-  mutate(id = row_number(), .before = oblast)
-feb <- feb_2024 %>% pivot_longer(5:6, names_to = "address", values_to = "февруари")
-
-mar_2024 <- read_csv("https://data.egov.bg/resource/download/275d844c-9c25-44de-ad91-2883d504b82e/csv",
-                     col_names = c("oblast", "obshtina", "sett", "Постоянен адрес", "Настоящ адрес"), skip = 1) %>% 
-  mutate(id = row_number(), .before = oblast)
-mar <- mar_2024 %>% pivot_longer(5:6, names_to = "address", values_to = "март")
-
-apr_2024 <- read_csv("https://data.egov.bg/resource/download/f162abaa-3558-49f7-bbfd-a0d284eb72b0/csv",
-                     col_names = c("oblast", "obshtina", "sett", "Постоянен адрес", "Настоящ адрес"), skip = 1) %>% 
-  mutate(id = row_number(), .before = oblast)
-apr <- apr_2024 %>% pivot_longer(5:6, names_to = "address", values_to = "април")
-
-may_2024 <- read_csv("https://data.egov.bg/resource/download/b8a7bb3a-fce2-4a5b-9852-0d430dd43ffb/csv",
-                     col_names = c("oblast", "obshtina", "sett", "Постоянен адрес", "Настоящ адрес"), skip = 1) %>% 
-  mutate(id = row_number(), .before = oblast)
-may <- may_2024 %>% pivot_longer(5:6, names_to = "address", values_to = "май")
-
-june_2024 <- read_csv("https://data.egov.bg/resource/download/5d72e5db-6b60-4530-98a4-cdb42e2c98b0/csv",
-                     col_names = c("oblast", "obshtina", "sett", "Постоянен адрес", "Настоящ адрес"), skip = 1) %>% 
-  mutate(id = row_number(), .before = oblast)
-june <- june_2024 %>% pivot_longer(5:6, names_to = "address", values_to = "юни")
-
-df_2024 <- left_join(jan, feb, by = c("id", "oblast", "obshtina", "sett", "address")) %>% 
-  left_join(., mar, by = c("id", "oblast", "obshtina", "sett", "address")) %>% 
-  left_join(., apr, by = c("id", "oblast", "obshtina", "sett", "address")) %>% 
-  left_join(., may, by = c("id", "oblast", "obshtina", "sett", "address")) %>% 
-  left_join(., june, by = c("id", "oblast", "obshtina", "sett", "address"))
-write_rds(df_2024, "shiny/elections/df_2024.rds")
-
-df_2024 %>% 
-  filter(obshtina == "СТОЛИЧНА") %>% 
-  mutate(diff = март - януари, 
-         sett = fct_reorder(sett, diff), 
-         col = diff > 0) %>% 
-  filter(diff != 0) %>%
-ggplot(aes(diff, sett, fill = col)) +
-  geom_col(show.legend = F) +
-  geom_text(aes(label = diff), 
-            position = position_dodge(width = 1), hjust = -0.05, size = 4) +
-  scale_x_continuous(expand = expansion(mult = c(.01, .25))) +
-  theme(text = element_text(size = 16)) +
-  labs(x = "Промяна в броя жители", y = NULL) +
-  facet_wrap(vars(address))
-
 # Election activity
 act <- tibble(
   voters_total = c(6588372, 6578716, 6635305, 6632375, 6602990, 6594593, 6810341, 6860588, 6859390, NA, NA, NA,
@@ -583,40 +533,14 @@ mand %>%
 library(fs)
 library(readxl)
 
-oct_2024_pref <- read_rds("data/pref/oct_2024_pref.rds")
-june_2024_pref <- read_rds("data/pref/june_2024_pref.rds")
-apr_2023_pref <- read_rds("data/pref/apr_2023_pref.rds")
-oct_2022_pref <- read_rds("data/pref/oct_2022_pref.rds")
-nov_2021_pref <- read_rds("data/pref/nov_2021_pref.rds")
-jul_2021_pref <- read_rds("data/pref/jul_2021_pref.rds")
-apr_2021_pref <- read_rds("data/pref/apr_2021_pref.rds")
-
-apr_2021_pref %>% map_dfr(sum(is.na(.)))
-apr_2021_pref %>% map_dfr(sum(. == 0))
-
-#write_rds(apr_2023_pref_new, "data/pref/apr_2023_pref.rds")
-
-ns01 <- read_excel("~/Downloads/spreadsheet/ns01.xlsx", sheet = 5, col_types = c("text"),
-                   col_names = c("code", "ekatte", "oblast", "obshtina", "section", "ballot_type",
-                                 "number", "party", "votes"), skip = 1:1) %>% 
-  mutate(votes = as.numeric(votes)) %>% select(-c(ekatte, number))
-
-ns <- ns01 %>% 
-  summarise(votes = sum(votes), .by = c(code, obshtina, oblast, section, party)) %>% 
-  summarise(votes = sum(votes), .by = party) %>% arrange(-votes)
-
 unzip(zipfile = "~/Downloads/spreadsheet.zip", exdir = "~/Downloads/spreadsheet")
 files <- dir_ls("~/Downloads/spreadsheet", glob = "*.xlsx")
 
-sheet_1 <- function(x){
-  read_excel(x, sheet = 1, col_types = c("text"))
-}
-
-sheet_5 <- function(x){
+sheet <- function(x){
   read_excel(x, sheet = 5, col_types = c("text"))
 }
 
-df <- map(files, sheet_1) %>% bind_rows()
+df <- map(files, sheet) %>% bind_rows()
 
 sec_coord <- df %>% select(code = `Номер на СИК`, ad = Адрес, lat = `Географска ширина`, long = `Географска дължина`) %>% 
   mutate(code = str_remove(code, "^0"))

@@ -26,9 +26,9 @@ eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>%
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
 glimpse(prc_hicp_minr)
 #-------------------------------------------------------------------------
-tec00011 <- get_eurostat("tec00011", type = "label", time_format = "date", stringsAsFactors = T)
+gov_10dd_edpt1 <- get_eurostat("gov_10dd_edpt1", type = "label", time_format = "date", stringsAsFactors = T)
 
-write_rds(tec00011, "shiny/eurostat/tec00011.rds")
+write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
 
 write_parquet(prc_hicp_minr, "shiny/inflation/prc_hicp_minr.parquet")
 write_parquet(prc_hicp_minr, "shiny/eurostat/prc_hicp_minr.parquet")
