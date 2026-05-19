@@ -40,6 +40,8 @@ sett_elev <- sett %>% left_join(elev, by = "ekatte")
 
 colors <- c('#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#990000')
 #-----------------------------------------------------------------------------
+df3 %>% mapview(lwd = 5)
+
 df %>% 
   mapview(legend = F, zcol = "shapeName", lwd = 2,
           col.regions = "white", alpha.regions = 0, color = "white")
