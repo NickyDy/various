@@ -2,7 +2,7 @@ library(tidyverse)
 library(tabulapdf)
 library(nanoparquet)
 
-link <- "https://www.dksbt.bg/doc/%D0%A1%D0%B5%D0%B4%D0%BC%D0%B8%D1%87%D0%B5%D0%BD%20%D0%B1%D1%8E%D0%BB%D0%B5%D1%82%D0%B8%D0%BD%20%2011%20%20-%2015%20%D0%BC%D0%B0%D0%B9%20NEW%202026.pdf"
+link <- "https://www.dksbt.bg/doc/%D0%A1%D0%B5%D0%B4%D0%BC%D0%B8%D1%87%D0%B5%D0%BD%20%D0%B1%D1%8E%D0%BB%D0%B5%D1%82%D0%B8%D0%BD%20%2018%20%20-%2022%20%D0%BC%D0%B0%D0%B9%20NEW%202026.pdf"
 
 table <- extract_tables(link, col_names = F, method = "stream", pages = 1, output = "tibble") %>% pluck(1) %>% 
   drop_na() %>% 
@@ -12,11 +12,11 @@ table <- extract_tables(link, col_names = F, method = "stream", pages = 1, outpu
   separate_wider_delim(cols = X10, names = c("X10", "X10_1"), delim = " ") %>%
   separate_wider_delim(cols = X12, names = c("X12", "X12_1"), delim = " ") %>%
   select(product = X1, unit = X2, 
-         "2026-05-11" = X4, 
-         "2026-05-12" = X6, 
-         "2026-05-13" = X8, 
-         "2026-05-14" = X9, 
-         "2026-05-15" = X11
+         "2026-05-18" = X4, 
+         "2026-05-19" = X6, 
+         "2026-05-20" = X8, 
+         "2026-05-21" = X9, 
+         "2026-05-22" = X11
          ) %>% 
   mutate(product = fct_recode(product, 'Брашно тип "500" /пакет 1 кг/' = "/пакет 1 кг/",
                               "Колбаси малотрайни /в т.ч. шунка/" = "малотрайни /в т.ч. шунка/",
@@ -28,8 +28,7 @@ table <- extract_tables(link, col_names = F, method = "stream", pages = 1, outpu
          price = as.numeric(value)) %>% 
   select(product, unit, date, price)
 
-df_market <- read_parquet("~/Desktop/R/shiny/markets/df_market.parquet") %>% 
-  slice(-c(6049:6208))
+df_market <- read_parquet("~/Desktop/R/shiny/markets/df_market.parquet")
 df_market <- bind_rows(df_market, table)
 
 write_parquet(df_market, "~/Desktop/R/shiny/markets/df_market.parquet")
