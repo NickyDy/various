@@ -16,22 +16,21 @@ prc_hicp_minr <- get_eurostat("prc_hicp_minr", type = "label", time_format = "da
                                                                           "cp10", "cp11", "cp12", "cp13")))
 prc_hicp_minr %>% count(time) %>% view
 
-sts_inpr_m <- get_eurostat("sts_inpr_m", type = "code", time_format = "date", stringsAsFactors = T) %>% 
-  filter(TIME_PERIOD >= "2000-01-01", nace_r2 == "C", s_adj == "SCA", unit == "PCH_PRE")
+prc_ppp_ind <- get_eurostat("prc_ppp_ind", type = "label", time_format = "date", stringsAsFactors = T)
 
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
   janitor::clean_names() %>% 
   select(name, geometry) %>% 
   mutate(name = fct_recode(name, "Czechia" = "Czech Rep.", "North Macedonia" = "Macedonia",
                            "Bosnia and Herzegovina" = "Bosnia and Herz."))
-glimpse(prc_hicp_minr)
+glimpse(prc_ppp_ind_1)
 #-------------------------------------------------------------------------
 gov_10dd_edpt1 <- get_eurostat("gov_10dd_edpt1", type = "label", time_format = "date", stringsAsFactors = T)
 
 write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
 
 write_parquet(prc_hicp_minr, "shiny/inflation/prc_hicp_minr.parquet")
-write_parquet(prc_hicp_minr, "shiny/eurostat/prc_hicp_minr.parquet")
+write_parquet(prc_ppp_ind_1, "shiny/eurostat/prc_ppp_ind_1.parquet")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
