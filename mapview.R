@@ -59,7 +59,7 @@ sett_elev %>%
                                   "300 - 499 вкл.", "500 - 699 вкл.", "700 - 999 вкл.", "1000 и повече",
                                   "NA")) %>% 
   mapview(color = "blue", zcol = "text",
-                    label = sett_elev$text, lwd = 1,
+                    label = sett_elev$sett_name, lwd = 1,
                     legend = T, col.regions = colors, 
                     alpha.regions = 0.5)
 

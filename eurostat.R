@@ -16,7 +16,7 @@ prc_hicp_minr <- get_eurostat("prc_hicp_minr", type = "label", time_format = "da
                                                                           "cp10", "cp11", "cp12", "cp13")))
 prc_hicp_minr %>% count(time) %>% view
 
-prc_ppp_ind <- get_eurostat("prc_ppp_ind", type = "label", time_format = "date", stringsAsFactors = T)
+gov_10q_ggnfa <- get_eurostat("gov_10q_ggnfa", type = "label", time_format = "date", stringsAsFactors = T)
 
 eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
   janitor::clean_names() %>% 
@@ -30,7 +30,7 @@ gov_10dd_edpt1 <- get_eurostat("gov_10dd_edpt1", type = "label", time_format = "
 write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
 
 write_parquet(prc_hicp_minr, "shiny/inflation/prc_hicp_minr.parquet")
-write_parquet(prc_ppp_ind_1, "shiny/eurostat/prc_ppp_ind_1.parquet")
+write_parquet(prc_hicp_minr, "shiny/eurostat/prc_hicp_minr.parquet")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
@@ -184,7 +184,7 @@ nrg_cb_pem <- get_eurostat("nrg_cb_pem", type = "label", time_format = "date", s
 
 nrg_cb_pem %>%
   filter(!str_detect(geo, "^Euro"),
-         TIME_PERIOD == "2026-02-01", unit == "Percentage",
+         TIME_PERIOD == "2026-03-01", unit == "Percentage",
          siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
                      "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
                      "Wind", "Solar"),
@@ -210,7 +210,7 @@ nrg_cb_pem %>%
   scale_x_continuous(expand = expansion(mult = c(0.01, 0.4))) +
   theme(text = element_text(size = 16), axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) +
-  labs(x = NULL, y = NULL, title = "Енергиен микс към февруари, 2026 г.",
+  labs(x = NULL, y = NULL, title = "Енергиен микс към март, 2026 г.",
        caption = "Източник на данните: Евростат") +
   facet_wrap(vars(geo))
 

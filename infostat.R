@@ -1,4 +1,5 @@
 library(tidyverse)
+library(nanoparquet)
 library(sf)
 library(patchwork)
 options(scipen = 100)
@@ -311,7 +312,7 @@ b <- hipc %>%
 
 a / b
 #---------------------------------------------------
-loc_sex <- read_delim("~/Downloads/report_1746023711070.csv", col_names = F, na = "-") %>% select(-X48)
+loc_sex <- read_delim("~/Downloads/report_1784012773408.csv", col_names = F, na = "-")
 
 loc_sex_n <- loc_sex %>%
   slice(-c(1:1)) %>% 
@@ -326,7 +327,8 @@ loc_sex_n <- loc_sex %>%
   slice(-c(1:1)) %>%
   mutate(`1` = str_replace(`1`, "_", "location")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(2:47, names_to = "name", values_to = "pop") %>% 
+  filter(!str_detect(location, "^BG\\d+")) %>%
+  pivot_longer(2:49, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "sex"), sep = "_") %>%
   mutate(oblast = case_when(str_detect(location, "^[:upper:]{3}\\s") ~ location),
          obshtina = case_when(str_detect(location, "^[:upper:]{3}\\d{2}") ~ location)) %>% 
@@ -338,7 +340,7 @@ loc_sex_n <- loc_sex %>%
          obshtina = case_when(location == "BG Общо за страната" ~ "BG Общо за страната", 
                               .default = obshtina)) %>% 
   select(oblast, obshtina, everything())
-write_rds(loc_sex_n, "shiny/demography/loc_sex.rds")
+write_parquet(loc_sex_n, "shiny/demography/loc_sex.parquet")
 
 loc_sex_n %>% 
   filter(year == 2024) %>% 
@@ -395,8 +397,8 @@ obsh_sex_n %>%
   labs(y = NULL, x = "Брой жители", title = "", fill = "Пол:") +
   facet_wrap(~ settlement)
 #------------------------------------------
-obl_age_sex <- read_delim("~/Downloads/report_1746080217490.csv", col_names = F, na = "-") %>% 
-  select(-X8) %>% mutate(across(everything(), as.character))
+obl_age_sex <- read_delim("~/Downloads/report_1784091459342.csv", col_names = F, na = "-") %>% 
+  mutate(across(everything(), as.character))
 
 obl_age_sex_n <- obl_age_sex %>%
   slice(-c(1:1)) %>% 
@@ -417,7 +419,8 @@ obl_age_sex_n <- obl_age_sex %>%
   separate(name, c("settlement", "sex"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% 
   mutate(age = str_remove_all(age, " "), age = fct_inorder(age)) %>% drop_na()
-write_rds(obl_age_sex_n, "shiny/demography/obl_age_sex.rds")
+
+write_parquet(obl_age_sex_n, "shiny/demography/obl_age_sex.parquet")
 
 obl_age_sex_n %>% 
   mutate(age = str_remove_all(age, " "), age = fct_inorder(age)) %>% 
@@ -485,10 +488,9 @@ obl_age_n %>%
   theme(text = element_text(size = 14), legend.position = "none") +
   labs(y = NULL, x = "Брой жители", title = "", fill = "Пол:")
 #------------------------------------------
-labor_sett_sex <- read_delim("~/Downloads/report_1746080566977.csv", col_names = F, na = "-") %>% 
-  mutate(X1 = case_when(row_number() %in% c(227:229) & X1 == "Бяла" ~ "Бяла (Русенско)",
-                        row_number() %in% c(278:280) & X1 == "Бяла" ~ "Бяла (Варненско)", .default = X1)) %>% 
-  select(-X53)
+labor_sett_sex <- read_delim("~/Downloads/report_1784176100371.csv", col_names = F, na = "-") %>% 
+  mutate(X1 = case_when(row_number() %in% c(230:232) & X1 == "Бяла" ~ "Бяла (Русенско)",
+                        row_number() %in% c(281:283) & X1 == "Бяла" ~ "Бяла (Варненско)", .default = X1))
 
 labor_sett_sex_n <- labor_sett_sex %>%
   slice(-c(1:1)) %>% 
@@ -504,7 +506,7 @@ labor_sett_sex_n <- labor_sett_sex %>%
   mutate(`1` = str_replace(`1`, "__", "obsh"),
          `2` = str_replace(`2`, "__", "labor")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(3:52, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(3:54, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "sett", "sex"), sep = "_") %>%
   select(obsh, year, sett, labor, sex, pop) %>% 
   mutate(pop = parse_number(pop), 
@@ -513,7 +515,8 @@ labor_sett_sex_n <- labor_sett_sex %>%
                              "Над трудоспособна възраст")) %>% 
   drop_na()
 labor_sett_sex_n %>% count(obsh) %>% view
-write_rds(labor_sett_sex_n, "shiny/demography/labor_sett_sex.rds")
+
+write_parquet(labor_sett_sex_n, "shiny/demography/labor_sett_sex.parquet")
 
 labor_sett_sex_n %>% 
   filter(obsh == "Бургас", year == 2024) %>% 
@@ -719,8 +722,7 @@ obsh_sett_marr_n %>%
   labs(y = NULL, x = "Брой раждания", fill = "Пол:") +
   facet_wrap(vars(sett))
 #------------------------------------------
-birth_rate <- read_delim("~/Downloads/report_1746080962391.csv", col_names = F, na = "-") %>% 
-  select(-X103)
+birth_rate <- read_delim("~/Downloads/report_1784176633915.csv", col_names = F, na = "-")
 
 birth_rate_n <- birth_rate %>%
   rownames_to_column() %>%
@@ -735,10 +737,11 @@ birth_rate_n <- birth_rate %>%
   mutate(`1` = str_replace(`1`, "_", "sett"),
          `2` = str_replace(`2`, "_", "oblast")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(3:102, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(3:106, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "coef"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
-write_rds(birth_rate_n, "shiny/demography//birth_rate.rds")
+
+write_parquet(birth_rate_n, "shiny/demography//birth_rate.parquet")
 
 birth_rate_n %>% 
   filter(coef == "Средна възраст на майката при раждане на дете (години)", year == 2023) %>% 
@@ -751,8 +754,8 @@ birth_rate_n %>%
   labs(y = NULL, x = "Коефициент", fill = "Пол:") +
   facet_wrap(vars(oblast))
 #------------------------------------------
-mortality <- read_delim("~/Downloads/report_1746081548640.csv", col_names = F, na = "-") %>% 
-  mutate(across(everything(), as.character)) %>% select(-X11)
+mortality <- read_delim("~/Downloads/report_1784177388700.csv", col_names = F, na = "-") %>% 
+  mutate(across(everything(), as.character))
 
 mortality_n <- mortality %>%
   slice(-c(1:1)) %>% 
@@ -771,7 +774,8 @@ mortality_n <- mortality %>%
   pivot_longer(3:10, names_to = "name", values_to = "pop") %>% 
   separate(name, c("coef", "sett", "sex"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
-write_rds(mortality_n, "shiny/demography//mortality.rds")
+
+write_parquet(mortality_n, "shiny/demography//mortality.parquet")
 
 mortality_n %>% 
   filter(coef == "Коефициент на обща смъртност", year == 2022) %>% 
@@ -785,9 +789,9 @@ mortality_n %>%
   facet_wrap(vars(oblast)) +
   guides(fill = guide_legend(reverse = TRUE))
 #------------------------------------------
-brakove <- read_delim("~/Downloads/report_1746081852794.csv", col_names = F, na = "-") %>% select(-X50) %>% 
-  mutate(X1 = case_when(row_number() == 78 & X1 == "Бяла" ~ "Бяла (Русенско)",
-                        row_number() == 95 & X1 == "Бяла" ~ "Бяла (Варненско)", .default = X1))
+brakove <- read_delim("~/Downloads/report_1784184803275.csv", col_names = F, na = "-") %>%
+  mutate(X1 = case_when(row_number() == 79 & X1 == "Бяла" ~ "Бяла (Русенско)",
+                        row_number() == 96 & X1 == "Бяла" ~ "Бяла (Варненско)", .default = X1))
 
 brakove_n <- brakove %>%
   slice(-c(1:1)) %>% 
@@ -802,11 +806,13 @@ brakove_n <- brakove %>%
   slice(-c(1:1)) %>%
   mutate(`1` = str_replace(`1`, "_", "obshtina")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(2:49, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(2:53, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "sett"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
+
 brakove_n %>% count(obshtina) %>% view
-write_rds(brakove_n, "shiny/demography//brakove.rds")
+
+write_parquet(brakove_n, "shiny/demography//brakove.parquet")
 
 brakove_n %>% 
   filter(obshtina == "Бяла") %>% 
@@ -819,9 +825,10 @@ brakove_n %>%
   labs(y = NULL, x = "Брой бракове", fill = "Пол:") +
   facet_wrap(vars(year))
 #------------------------------------------
-razvodi <- read_delim("~/Downloads/report_1746082231531.csv", col_names = F, na = "-") %>% select(-X52) %>%
-  mutate(X1 = case_when(row_number() == 78 & X1 == "Бяла" ~ "Бяла (Русенско)",
-                        row_number() == 95 & X1 == "Бяла" ~ "Бяла (Варненско)", .default = X1))
+razvodi <- read_delim("~/Downloads/report_1784184735595.csv", col_names = F, na = "-") %>%
+  mutate(X1 = case_when(row_number() == 79 & X1 == "Бяла" ~ "Бяла (Русенско)",
+                        row_number() == 96 & X1 == "Бяла" ~ "Бяла (Варненско)", .default = X1)) |> 
+  select(-c(X52, X53))
 
 razvodi_n <- razvodi %>%
   slice(-c(1:1)) %>% 
@@ -839,8 +846,10 @@ razvodi_n <- razvodi %>%
   pivot_longer(2:51, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "sett"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
-razvodi_n %>% count(obsh) %>% view
-write_rds(razvodi_n, "shiny/demography/razvodi.rds")
+
+razvodi_n %>% count(obshtina) %>% view
+
+write_parquet(razvodi_n, "shiny/demography/razvodi.parquet")
 
 razvodi_n %>% 
   filter(obshtina == "Благоевград") %>% 
@@ -853,9 +862,9 @@ razvodi_n %>%
   labs(y = NULL, x = "Брой разводи", fill = "Пол:") +
   facet_wrap(vars(year))
 #------------------------------------------
-int_migration <- read_delim("~/Downloads/report_1746164854658.csv", col_names = F, na = "-") %>% select(-X153) %>% 
-  mutate(X1 = case_when(row_number() %in% c(153:154) & X1 == "Бяла" ~ "Бяла (Русенско)",
-                        row_number() %in% c(187:188) & X1 == "Бяла" ~ "Бяла (Варненско)", .default = X1))
+int_migration <- read_delim("~/Downloads/report_1784261190149.csv", col_names = F, na = "-") %>%
+  mutate(X1 = case_when(row_number() %in% c(155:156) & X1 == "Бяла" ~ "Бяла (Русенско)",
+                        row_number() %in% c(189:190) & X1 == "Бяла" ~ "Бяла (Варненско)", .default = X1))
 
 int_migration_n <- int_migration %>%
   slice(-c(1:1)) %>% 
@@ -871,12 +880,14 @@ int_migration_n <- int_migration %>%
   mutate(`1` = str_replace(`1`, "__", "obshtina"),
          `2` = str_replace(`2`, "__", "sett")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(3:152, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(3:158, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "migrated", "sex"), sep = "_") %>%
   mutate(migrated = fct_relevel(migrated, "Заселени", "Изселени", "Механичен прираст"), 
          pop = parse_number(pop)) %>% drop_na()
-int_migration_n %>% count(obsh) %>% view
-write_rds(int_migration_n, "shiny/demography//int_migration.rds")
+
+int_migration_n %>% count(obshtina) %>% view
+
+write_parquet(int_migration_n, "shiny/demography//int_migration.parquet")
 
 int_migration_n %>% 
   filter(obshtina == "Елхово", sett == "В селата") %>% 
@@ -889,8 +900,7 @@ int_migration_n %>%
   labs(y = NULL, x = NULL, fill = "Пол:") +
   facet_wrap(vars(migrated), ncol = 1)
 #------------------------------------------
-ext_migration <- read_delim("~/Downloads/report_1746165274174.csv", col_names = F, na = "-") %>% 
-  select(-X57)
+ext_migration <- read_delim("~/Downloads/report_1784261675489.csv", col_names = F, na = "-")
 
 ext_migration_n <- ext_migration %>%
   slice(-c(1:1)) %>% 
@@ -906,13 +916,13 @@ ext_migration_n <- ext_migration %>%
   mutate(`1` = str_replace(`1`, "_", "sex"),
          `2` = str_replace(`2`, "_", "age")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(3:56, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(3:59, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "migrated"), sep = "_") %>%
   mutate(migrated = fct_relevel(migrated, "Заселени", "Изселени", "Механичен прираст"), 
          pop = parse_number(pop),
          age = str_remove_all(age, "\\s")) %>% drop_na()
-ext_migration_n %>% count(obsh) %>% view
-write_rds(ext_migration_n, "shiny/demography//ext_migration.rds")
+
+write_parquet(ext_migration_n, "shiny/demography/ext_migration.parquet")
 
 ext_migration_n %>% 
   filter(age == "20-24") %>% 
@@ -926,9 +936,9 @@ ext_migration_n %>%
   facet_wrap(vars(migrated), ncol = 1) +
   guides(fill = guide_legend(reverse = TRUE))
 #------------------------------------------
-school <- read_delim("~/Downloads/report_1746165710460.csv", col_names = F, na = "-") %>% select(-X50)
+school1 <- read_delim("~/Downloads/report_1784262590028.csv", col_names = F, na = "-")
 
-school_n <- school %>%
+school_n1 <- school1 %>%
   slice(-c(1:1)) %>% 
   rownames_to_column() %>%
   pivot_longer(-rowname) %>%
@@ -944,8 +954,29 @@ school_n <- school %>%
   pivot_longer(2:49, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "education"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
-school_n %>% count(location) %>% view
-write_rds(school_n, "shiny/demography//school.rds")
+
+school2 <- read_delim("~/Downloads/report_1784262761677.csv", col_names = F, na = "-")
+
+school_n2 <- school2 %>%
+  slice(-c(1:1)) %>% 
+  rownames_to_column() %>%
+  pivot_longer(-rowname) %>%
+  pivot_wider(names_from = rowname, values_from = value) %>%
+  unite("united", 2:3, sep = "_") %>%
+  rownames_to_column() %>%
+  pivot_longer(-rowname) %>%
+  pivot_wider(names_from = rowname, values_from = value) %>%
+  select(!name) %>%
+  slice(-c(1:1)) %>%
+  mutate(`1` = str_replace(`1`, "_", "obshtina")) %>%
+  janitor::row_to_names(row_number = 1) %>%
+  pivot_longer(2:5, names_to = "name", values_to = "pop") %>% 
+  separate(name, c("year", "education"), sep = "_") %>%
+  mutate(pop = parse_number(pop)) %>% drop_na()
+
+school_n <- bind_rows(school_n1, school_n2)
+
+write_parquet(school_n, "shiny/demography/school.parquet")
 
 school_n %>% 
   filter(obshtina == "SOF46 Столична") %>% 
@@ -959,7 +990,7 @@ school_n %>%
   facet_wrap(vars(education), ncol = 1) +
   guides(fill = guide_legend(reverse = TRUE))
 #------------------------------------------
-university <- read_delim("university.csv", col_names = F, na = "-") %>% select(-X98)
+university <- read_delim("~/Downloads/report_1784263450055.csv", col_names = F, na = "-")
 
 university_n <- university %>%
   slice(-c(1:1)) %>% 
@@ -974,12 +1005,12 @@ university_n <- university %>%
   slice(-c(1:1)) %>%
   mutate(`1` = str_replace(`1`, "__", "oblast")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(2:97, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(2:103, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "grade", "sex"), sep = "_") %>%
   mutate(pop = parse_number(pop),
          grade = fct_relevel(grade, "Магистър", "Бакалавър", "Професионален бакалавър")) %>% drop_na()
-school_n %>% count(location) %>% view
-write_rds(university_n, "shiny/demography//university.rds")
+
+write_parquet(university_n, "shiny/demography/university.parquet")
 
 university_n %>% 
   filter(oblast == "Ямбол") %>% 
@@ -993,9 +1024,7 @@ university_n %>%
   facet_wrap(vars(grade), ncol = 1) +
   guides(fill = guide_legend(reverse = TRUE))
 #------------------------------------------
-# health1 <- read_delim("data/health1.csv", col_names = F, na = "-") %>% select(-X842)
-health1 <- read_csv2("data/health1.csv", col_names = F, na = "-")
-health2 <- read_csv2("health2.csv", col_names = F, na = "-") %>% select(-X226)
+health1 <- read_csv2("~/Downloads/report_1784265692068.csv", col_names = F, na = "-")
 
 health1_n <- health1 %>%
   slice(-c(1:1)) %>%
@@ -1010,9 +1039,11 @@ health1_n <- health1 %>%
   slice(-c(1:1)) %>%
   mutate(`1` = str_replace(`1`, "__", "zabolqvane")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(2:841, names_to = "name", values_to = "pop") %>%
+  pivot_longer(2:871, names_to = "name", values_to = "pop") %>%
   separate(name, c("year", "oblast", "sex"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
+
+health2 <- read_csv2("~/Downloads/report_1784265772531.csv", col_names = F, na = "-")
 
 health2_n <- health2 %>%
   slice(-c(1:1)) %>% 
@@ -1027,13 +1058,23 @@ health2_n <- health2 %>%
   slice(-c(1:1)) %>%
   mutate(`1` = str_replace(`1`, "__", "zabolqvane")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(2:225, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(2:349, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "oblast", "sex"), sep = "_") %>%
   mutate(pop = parse_number(pop)) %>% drop_na()
 
 health_n <- bind_rows(health1_n, health2_n)
+
+health_n <- health_n %>% 
+  mutate(zabolqvane = fct_recode(zabolqvane, "Болест на Hodgkin и лимфоми (C81-C86)" = "Болест на 'Hodgkin и лимфоми (C81-C86)",
+                                 "Други злополуки (W20-W64, W75- X39, X50-59, Y86)" = "Други зополуки (W20-W64, W75- X39, X50-59, Y86)",
+                                 "Нападение (X85-Y09, Y87.1)" = "Нападение (X85-Y09,Y87.1)",
+                                 "Нараняване с неопределени намерения (Y10-Y34, Y87.2)" = "Нараняване с неопределени намерения (Y10-Y34,Y87.2)",
+                                 "Случайно удавяне и потъване във вода (W65-W74)" = "Случайно удавяне и потъване във вода '(W65-W74)",
+                                 "Умишлено самонараняване (X60-X84, Y87.0)" = "Умишлено самонараняване (X60-X84,Y87.0)"))
+
 health_n %>% count(zabolqvane) %>% view
-write_rds(health_n, "shiny/demography//health.rds")
+
+write_parquet(health_n, "shiny/demography/health.parquet")
 
 health_n %>% 
   filter(oblast == "София", zabolqvane == "Злокачествени новообразувания (C00-C97)") %>% 
@@ -1047,7 +1088,7 @@ health_n %>%
   facet_wrap(vars(sex), ncol = 1) +
   guides(fill = guide_legend(reverse = TRUE))
 #------------------------------------------
-kinder_gardens <- read_delim("kinder_gardens.csv", col_names = F, na = "-") %>% select(-X50) %>% 
+kinder_gardens <- read_delim("~/Downloads/report_1784267584549.csv", col_names = F, na = "-") %>%
   mutate(X1 = case_when(row_number() == 78 & X1 == "Бяла" ~ "Бяла (Русенско)",
                         row_number() == 95 & X1 == "Бяла" ~ "Бяла (Варненско)", .default = X1))
 
@@ -1064,12 +1105,12 @@ kinder_gardens_n <- kinder_gardens %>%
   slice(-c(1:1)) %>%
   mutate(`1` = str_replace(`1`, "_", "obshtina")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(2:49, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(2:47, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "sex"), sep = "_") %>%
   mutate(pop = parse_number(pop),
          sex = fct_recode(sex, "Момчета" = "Мъже", "Момичета" = "Жени")) %>% drop_na()
-school_n %>% count(location) %>% view
-write_rds(kinder_gardens_n, "shiny/demography//kinder_gardens.rds")
+
+write_parquet(kinder_gardens_n, "shiny/demography//kinder_gardens.parquet")
 
 kinder_gardens_n %>% 
   filter(obshtina == "Бойница") %>% 
@@ -1084,27 +1125,33 @@ kinder_gardens_n %>%
   labs(y = "Брой деца", x = NULL, fill = "Пол:") +
   guides(fill = guide_legend(reverse = TRUE))
 #------------------------------------------
-poverty <- read_delim("~/Downloads/report_1746166317239.csv", col_names = F, na = "-") %>% select(-X20)
+poverty <- read_delim("~/Downloads/report_1784348960091.csv", col_names = T, na = "-")
+
+# poverty_n <- poverty %>%
+#   slice(-c(1:1)) %>% 
+#   rownames_to_column() %>%
+#   pivot_longer(3:20) %>%
+#   pivot_wider(names_from = rowname, values_from = value) %>%
+#   unite("united", 2:3, sep = "_") %>%
+#   rownames_to_column() %>%
+#   pivot_longer(-rowname) %>%
+#   pivot_wider(names_from = rowname, values_from = value) %>%
+#   select(!name) %>%
+#   slice(-c(1:1)) %>%
+#   mutate(`1` = str_replace(`1`, "_", "sex"),
+#          `2` = str_replace(`2`, "_", "age")) %>%
+#   janitor::row_to_names(row_number = 1) %>%
+#   pivot_longer(3:20, names_to = "name", values_to = "pop") %>% 
+#   separate(name, c("perc", "year"), sep = "_") %>%
+#   mutate(pop = parse_number(pop)) %>% drop_na()
 
 poverty_n <- poverty %>%
-  #slice(-c(1:1)) %>% 
-  rownames_to_column() %>%
-  pivot_longer(-rowname) %>%
-  pivot_wider(names_from = rowname, values_from = value) %>%
-  unite("united", 2:3, sep = "_") %>%
-  rownames_to_column() %>%
-  pivot_longer(-rowname) %>%
-  pivot_wider(names_from = rowname, values_from = value) %>%
-  select(!name) %>%
-  slice(-c(1:1)) %>%
-  mutate(`1` = str_replace(`1`, "_", "sex"),
-         `2` = str_replace(`2`, "_", "age")) %>%
-  janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(3:19, names_to = "name", values_to = "pop") %>% 
-  separate(name, c("perc", "year"), sep = "_") %>%
-  mutate(pop = parse_number(pop)) %>% drop_na()
+  select(sex = `...1`, age = `...2`, everything()) |> 
+  pivot_longer(-c(sex, age), names_to = "year", values_to = "pop")
+
 school_n %>% count(location) %>% view
-write_rds(poverty_n, "shiny/demography//poverty.rds")
+
+write_parquet(poverty_n, "shiny/demography/poverty.parquet")
 
 poverty_n %>% 
   #filter(obshtina == "Бойница") %>% 
@@ -1119,31 +1166,33 @@ poverty_n %>%
   facet_wrap(vars(age), ncol = 1) +
   guides(fill = guide_legend(reverse = TRUE))
 #------------------------------------------
-potreblenie <- read_delim("~/Downloads/report_1746166632266.csv", col_names = c("oblast", "product", "2008", "2009", "2010",
-                                                            "2011", "2012", "2013", "2014", "2015", "2016",
-                                                            "2017", "2018", "2019", "2020", "2021", "2022",
-                                                            "2023", "2024"), na = "-") %>% select(-X20) %>% slice(-c(1:1)) %>% 
+potreblenie <- read_delim("~/Downloads/report_1784353379625.csv", col_names = T, na = "-") %>%
   mutate(across(everything(), as.character)) 
 
+# potreblenie_n <- potreblenie %>%
+#   slice(-c(1:1)) %>%
+#   rownames_to_column() %>%
+#   pivot_longer(-rowname) %>%
+#   pivot_wider(names_from = rowname, values_from = value) %>%
+#   unite("united", 2:3, sep = "_") %>%
+#   rownames_to_column() %>%
+#   pivot_longer(-rowname) %>%
+#   pivot_wider(names_from = rowname, values_from = value) %>%
+#   select(!name) %>%
+#   slice(-c(1:1)) %>%
+#   mutate(`1` = str_replace(`1`, "_", "sex"),
+#          `2` = str_replace(`2`, "_", "age")) %>%
+#   janitor::row_to_names(row_number = 1) %>%
+#   pivot_longer(3:19, names_to = "year", values_to = "value") %>% 
+#   separate(name, c("perc", "year"), sep = "_") %>%
+#   mutate(value = parse_number(value)) %>% drop_na()
+
 potreblenie_n <- potreblenie %>%
-  #slice(-c(1:1)) %>% 
-  # rownames_to_column() %>%
-  # pivot_longer(-rowname) %>%
-  # pivot_wider(names_from = rowname, values_from = value) %>%
-  # unite("united", 2:3, sep = "_") %>%
-  # rownames_to_column() %>%
-  # pivot_longer(-rowname) %>%
-  # pivot_wider(names_from = rowname, values_from = value) %>%
-  # select(!name) %>%
-  # slice(-c(1:1)) %>%
-  # mutate(`1` = str_replace(`1`, "_", "sex"),
-  #        `2` = str_replace(`2`, "_", "age")) %>%
-  # janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(3:19, names_to = "year", values_to = "value") %>% 
-  # separate(name, c("perc", "year"), sep = "_") %>%
-  mutate(value = parse_number(value)) %>% drop_na()
-school_n %>% count(location) %>% view
-write_rds(potreblenie_n, "shiny/demography/potreblenie.rds")
+  select(oblast = `...1`, product = `...2`, everything()) |> 
+  pivot_longer(-c(oblast, product), names_to = "year", values_to = "value") |> 
+  mutate(value = parse_number(value))
+
+write_parquet(potreblenie_n, "shiny/demography/potreblenie.parquet")
 
 potreblenie_n %>% 
   filter(product == "Хляб и тестени изделия - кг", oblast == "Ямбол") %>% 
@@ -1156,7 +1205,7 @@ potreblenie_n %>%
   theme(text = element_text(size = 16), legend.position = "right") +
   labs(y = "Потребление", x = NULL)
 #------------------------------------------
-prestupnost <- read_delim("prestupnost.csv", col_names = F, na = "-") %>% select(-X322)
+prestupnost <- read_delim("~/Downloads/report_1784356428686.csv", col_names = F, na = "-")
 
 prestupnost_n <- prestupnost %>%
   slice(-c(1:1)) %>% 
@@ -1171,13 +1220,13 @@ prestupnost_n <- prestupnost %>%
   slice(-c(1:1)) %>%
   mutate(`1` = str_replace(`1`, "__", "oblast")) %>%
   janitor::row_to_names(row_number = 1) %>%
-  pivot_longer(2:379, names_to = "name", values_to = "pop") %>% 
+  pivot_longer(2:397, names_to = "name", values_to = "pop") %>% 
   separate(name, c("year", "age", "sex"), sep = "_") %>%
   mutate(pop = parse_number(pop), 
          age = str_remove_all(age, " "),
          age = str_replace(age, "60иповече", "60 и повече")) %>% drop_na()
-school_n %>% count(location) %>% view
-write_rds(prestupnost_n, "shiny/demography/prestupnost.rds")
+
+write_parquet(prestupnost_n, "shiny/demography/prestupnost.parquet")
 
 prestupnost_n %>% 
   filter(oblast == "Ямбол") %>% 
