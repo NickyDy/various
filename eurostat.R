@@ -38,7 +38,7 @@ gov_10dd_edpt1 <- get_eurostat("gov_10dd_edpt1", type = "label", time_format = "
 write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
 
 write_parquet(prc_hicp_minr, "shiny/inflation/prc_hicp_minr.parquet")
-write_parquet(gov_10q_ggnfa, "shiny/eurostat/gov_10q_ggnfa.parquet")
+write_parquet(prc_hicp_minr, "shiny/eurostat/prc_hicp_minr.parquet")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 

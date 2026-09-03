@@ -13,7 +13,7 @@ nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
 topch <- st_read("data/topchiq_project.geojson")
 
-json <- fromJSON(glue::glue("https://www.geoboundaries.org/api/current/gbOpen/ITA/ADM2/"))
+json <- fromJSON(glue::glue("https://www.geoboundaries.org/api/current/gbOpen/ESP/ADM1/"))
 df <- read_sf(json[["simplifiedGeometryGeoJSON"]])
 dframe <- bind_rows(bgr_json, cze_json)
 #----------------------------
@@ -44,7 +44,7 @@ df3 %>% mapview(lwd = 5)
 
 df %>% 
   mapview(legend = F, zcol = "shapeName", lwd = 2,
-          col.regions = "white", alpha.regions = 0, color = "white")
+          col.regions = "white", alpha.regions = 0, color = "blue")
 
 df %>% mapview(zcol = "shapeName", legend = F, color = "red", col.regions = "red")
 
