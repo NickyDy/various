@@ -13,7 +13,7 @@ nh <- st_read("data/nh.gpkg")
 nb <- st_read("data/nb.gpkg")
 topch <- st_read("data/topchiq_project.geojson")
 
-json <- fromJSON(glue::glue("https://www.geoboundaries.org/api/current/gbOpen/ESP/ADM1/"))
+json <- fromJSON(glue::glue("https://www.geoboundaries.org/api/current/gbOpen/DEU/ADM1/"))
 df <- read_sf(json[["simplifiedGeometryGeoJSON"]])
 dframe <- bind_rows(bgr_json, cze_json)
 #----------------------------

@@ -192,7 +192,7 @@ nrg_cb_pem <- get_eurostat("nrg_cb_pem", type = "label", time_format = "date", s
 
 nrg_cb_pem %>%
   filter(!str_detect(geo, "^Euro"),
-         TIME_PERIOD == "2026-03-01", unit == "Percentage",
+         TIME_PERIOD == "2026-06-01", unit == "Percentage",
          siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
                      "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
                      "Wind", "Solar"),
@@ -218,7 +218,7 @@ nrg_cb_pem %>%
   scale_x_continuous(expand = expansion(mult = c(0.01, 0.4))) +
   theme(text = element_text(size = 16), axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) +
-  labs(x = NULL, y = NULL, title = "Енергиен микс към март, 2026 г.",
+  labs(x = NULL, y = NULL, title = "Енергиен микс към юни, 2026 г.",
        caption = "Източник на данните: Евростат") +
   facet_wrap(vars(geo))
 
