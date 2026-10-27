@@ -14,31 +14,29 @@ prc_hicp_minr <- get_eurostat("prc_hicp_minr", type = "label", time_format = "da
                               filters = list(unit = "RCH_M", coicop18 = c("total", "cp01", "cp02", "cp03", "cp04",
                                                                           "cp05", "cp06", "cp07", "cp08", "cp09",
                                                                           "cp10", "cp11", "cp12", "cp13")))
-prc_hicp_minr %>% count(time) %>% view
-
-nama_10_gdp <- get_eurostat("nama_10_gdp", type = "label", time_format = "date", stringsAsFactors = T) %>% 
-  filter(na_item == "Gross domestic product at market prices", unit == "Current prices, million euro",
-         TIME_PERIOD >= "1990-01-01")
-nama_10_pc <- get_eurostat("nama_10_pc", type = "label", time_format = "date", stringsAsFactors = T) %>% 
-  filter(na_item == "Gross domestic product at market prices", unit == "Current prices, euro per capita",
-         TIME_PERIOD >= "1990-01-01")
-gov_10q_ggnfa <- get_eurostat("gov_10q_ggnfa", type = "label", time_format = "date", stringsAsFactors = T) %>% 
-  filter(sector %in% c("General government"), s_adj %in% c("Seasonally and calendar adjusted data"),
-         na_item %in% c("Net lending (+)/net borrowing (-)"), TIME_PERIOD >= "2000-01-01")
-
-eur <- ne_download(scale = 50, type = "sovereignty", returnclass = "sf") %>% 
-  janitor::clean_names() %>% 
-  select(name, geometry) %>% 
-  mutate(name = fct_recode(name, "Czechia" = "Czech Rep.", "North Macedonia" = "Macedonia",
-                           "Bosnia and Herzegovina" = "Bosnia and Herz."))
-glimpse(prc_ppp_ind_1)
-#-------------------------------------------------------------------------
-gov_10dd_edpt1 <- get_eurostat("gov_10dd_edpt1", type = "label", time_format = "date", stringsAsFactors = T)
-
-write_rds(gov_10dd_edpt1, "shiny/eurostat/gov_10dd_edpt1.rds")
 
 write_parquet(prc_hicp_minr, "shiny/inflation/prc_hicp_minr.parquet")
 write_parquet(prc_hicp_minr, "shiny/eurostat/prc_hicp_minr.parquet")
+
+
+prc_hicp_minr %>% count(time) %>% view
+#-------------------------------------------------------------------------
+sts_inpr_m <- get_eurostat("sts_inpr_m", type = "code", time_format = "date", stringsAsFactors = T,
+                           filters = list(nace_r2 = "C", s_adj = "SCA", unit = "PCH_PRE")) %>% 
+  filter(time >= "2000-01-01")
+
+prc_fpmt_m <- get_eurostat("prc_fpmt_m", type = "label", time_format = "date", stringsAsFactors = T)
+
+prc_fpmt_m %>% 
+  filter(indx == "Harmonised index of consumer prices", unit == "Monthly rate of change",
+         coicop18 == "Oils and fats (ND)", TIME_PERIOD > "2026-01-01", !str_detect(geo, "^Euro")) %>%
+  mutate(csum = round(cumsum(values), 1)) %>% 
+  ggplot(aes(TIME_PERIOD, csum)) +
+  geom_point(size = 1) +
+  geom_line(linetype = 2, linewidth = 0.3) +
+  facet_wrap(vars(geo))
+
+write_parquet(tipsun30, "shiny/eurostat/tipsun30.parquet")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
