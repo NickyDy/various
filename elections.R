@@ -1,27 +1,25 @@
 library(tidyverse)
+library(nanoparquet)
 library(scales)
 library(tidytext)
-library(nanoparquet)
 library(sf)
 library(mapview)
 #library(geodata)
 #library(readxl)
-glimpse(votes)
+glimpse(united)
 
-votes_new <- read_parquet("shiny/elections/votes_new.parquet") %>% 
+united <- read_parquet("data/elections/united.parquet")
+votes <- read_parquet("shiny/elections/votes.parquet") %>% 
   mutate(code = str_replace(code, "^0", ""))
-votes <- read_rds("shiny/elections/votes.rds")
 mand <- read_rds("shiny/elections/mand.rds")
-activity <- read_rds("shiny/elections/activity.rds")
+activity <- read_parwuet("shiny/elections/activity.parwuet")
 obsh_map <- st_read("data/obsh_map.gpkg")
 obl_map <- st_read("data/obl_map.gpkg")
 sett_map <- st_read("data/settlements.geojson")
 
 bg_map <- gadm("BGR", level = 0, path = tempdir())
 
-write_rds(votes, "shiny/elections/votes.rds")
-write_rds(mand, "shiny/elections/mand.rds")
-write_rds(activity, "shiny/elections/activity.rds")
+write_parquet(votes, "data/elections/united.parquet")
 
 glimpse(votes)
 votes %>% filter(oblast == "Извън страната") %>% 
@@ -43,7 +41,7 @@ colors <- c(
   "ГЕРБ" = "blue",
   "ОП (НФСБ, АТАКА и ВМРО)" = "brown",
   "ВОЛЯ" = "pink",
-  "ВЕЛИЧИЕ" = "maroon",
+  "ВЕЛИЧИЕ" = "#FF00FF",
   "ДПС-НH" = "purple",
   "АПС" = "purple",
   "МЕЧ" = "maroon",
@@ -70,7 +68,7 @@ sec <- fakulteta_sf
 funk(sec)
 
 funk <- function(sec){
-votes_new %>%
+votes %>%
   filter(vote_date != "Март_2017",
          code == sec
          ) %>%
@@ -106,17 +104,19 @@ votes_new %>%
 
 ggsave("312500046.png", width = 18, height = 10)
 
-votes_new %>%
-  filter(vote_date != "Март_2017") %>%
+united %>%
   mutate(vote_date = fct_relevel(vote_date,
+                                 "Ноември_2026",
+                                 "Октомври_2026",
                                  "Април_2026",
-                                 "Октомври_2024",
-                                 "Юни_2024",
-                                 "Април_2023",
-  															 "Октомври_2022", 
-  															 "Ноември_2021", 
-  															 "Юли_2021", 
-  															 "Април_2021")) %>%
+                                 #"Октомври_2024",
+  #                                "Юни_2024",
+  #                                "Април_2023",
+  # 															 "Октомври_2022", 
+  # 															 "Ноември_2021", 
+  # 															 "Юли_2021", 
+  # 															 "Април_2021"
+  															 )) %>%
   summarise(sum_votes = sum(votes, na.rm = T), .by = c(vote_date, party)) %>%
   group_by(vote_date) %>%
   mutate(prop = sum_votes / sum(sum_votes, na.rm = T)) %>%
@@ -126,7 +126,7 @@ votes_new %>%
   geom_col(show.legend = F) +
   #guides(fill = guide_legend(reverse = TRUE)) +
   scale_x_continuous(expand = expansion(mult = c(.05, .7))) +
-	scale_y_discrete(labels = scales::label_wrap(50)) +
+	#scale_y_discrete(labels = scales::label_wrap(50)) +
   scale_fill_manual(values = colors) +
   geom_text(aes(label = scales::percent(prop, accuracy = 0.01)),
     position = position_dodge(width = 1), hjust = -0.1, size = 12, size.unit = "pt") +
@@ -136,6 +136,40 @@ votes_new %>%
   labs(x = NULL, y = NULL, title = NULL,
        caption = "Източник на данните: ЦИК.") +
   facet_wrap(~ vote_date, nrow = 1)
+
+united %>%
+  #filter(str_detect(oblast, "Благоевград")) %>% 
+  mutate(vote_date = fct_relevel(vote_date,
+                                 "Ноември_2026",
+                                 "Октомври_2026",
+                                 "Април_2026",
+                                 #"Октомври_2024",
+                                 #"Юни_2024",
+                                 #"Април_2023",
+                                 #"Октомври_2022", 
+                                 #"Ноември_2021", 
+                                 #"Юли_2021", 
+                                 #"Април_2021"
+  )) %>%
+  summarise(sum_votes = sum(votes, na.rm = T), .by = c(vote_date, party)) %>%
+  group_by(vote_date) %>% 
+  mutate(total = sum(sum_votes, na.rm = T)) %>% 
+  ungroup() %>% 
+  filter(sum_votes >= 1) %>%
+  mutate(party = fct_reorder(party, sum_votes)) %>%
+  ggplot(aes(sum_votes, party, fill = party)) +
+  geom_col(show.legend = F) +
+  scale_x_continuous(expand = expansion(mult = c(.05, .9))) +
+  scale_fill_manual(values = colors) +
+  geom_text(aes(label = space_s(sum_votes)), 
+            hjust = -0.05, size = 11, size.unit = "pt") +
+  theme(text = element_text(size = 14), 
+        axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank(),
+        strip.text = element_text(face = "bold")) +
+  labs(y = NULL, x = "Брой гласове",
+       caption = "Източник на данните: ЦИК.") +
+  facet_wrap(vote_date ~ paste0("Общо: ", total), nrow = 1)
 
 votes_new %>% 
   filter(vote_date %in% c("Април_2026", "Октомври_2024")) %>% 
@@ -269,7 +303,7 @@ votes_new %>%
   labs(y = NULL, x = "Брой гласове", fill = "Легенда:")
 
 # Maps-------------------------------------------------
-db <- votes_new %>%
+db <- votes %>%
   filter(vote_date %in% c("Април_2026")) %>%
   summarise(sum_party = sum(votes, na.rm = T), .by = c(vote_date, section, party)) %>%
   group_by(vote_date, section) %>%
@@ -321,34 +355,62 @@ map %>%
 # annotation_north_arrow(location = "tr", which_north = "true",
 # pad_x = unit(0, "in"), pad_y = unit(0.3, "in"),
 # style = north_arrow_fancy_orienteering)
+
+db <- united %>%
+  filter(vote_date == "Ноември_2026") %>% 
+  summarise(sum_votes = sum(votes, na.rm = T), .by = c(obshtina, party)) %>%
+  group_by(obshtina) %>%
+  mutate(sum_obshtina = sum(sum_votes), 
+         perc = sum_votes / sum_obshtina * 100) %>% 
+  filter(
+    #str_detect(kand, "Йотова"), 
+    perc > 50
+    )
+map <- obsh_map %>% 
+  left_join(db, by = c("obshtina_bg" = "obshtina")) %>%
+  mutate_if(is.numeric, round, 1) %>% 
+  mutate(party = if_else(is.na(party), "pinko", party))
+map %>% 
+  #filter(oblast_bg == "Ямбол") %>% 
+  ggplot() +
+  geom_sf(aes(fill = party), alpha = .4) +
+  # geom_sf_text(aes(label = perc),
+  #              check_overlap = TRUE, size = 3) +
+  geom_sf_text(aes(label = obshtina_bg),
+               check_overlap = TRUE, size = 3, vjust = -1.5) +
+  theme(text = element_text(size = 16), legend.position = "none",
+        axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  labs(x = NULL, y = NULL, fill = "(%)", title = NULL) +
+  scale_fill_manual(values = c("ПП-ДБ" = "blue","ПБ" = "darkgreen", "pinko" = "pink"))
 #----------------------------
 # Election activity
 act <- tibble(
   voters_total = c(6588372, 6578716, 6635305, 6632375, 6602990, 6594593, 6810341, 6860588, 6859390, NA, NA, NA,
                    NA, NA, NA, NA, NA, NA, NA, NA, NA, 6837737, 6859318, 6817914, 6859318, NA, NA, 6593275,
-                   6601262, 6575151),
+                   6601262, 6575151, 6637238, 6637274),
   voters = c(3334283, 2775410, 2669260, 2310903, 2601963, 2683606, 3682151, 3943004, 3540829, NA, NA, NA,
              NA, NA, NA, NA, NA, NA, NA, NA, NA, 4317161, 4215145, 5139891, 5206226, NA, NA, 2268644,
-             2570629, 3360330),
+             2570629, 3360330, 1525034, 1902933),
   activity = c(50.61, 42.19, 40.23, 34.84, 39.41, 40.69, 54.07, 57.47, 51.62, 48.66, 51.33, 60.20, 42.51, 41.21,
                55.76, 67, 41.8, 55.1, 62.4, 75.3, 83.9, 63.14, 61.67, 75.39, 75.90, 52.29, 48.25, 34.41,
-               38.94, 51.11),
+               38.94, 51.11, 22.98, 28.67),
   type_election = c("Парламент", "Парламент", "Парламент и президент", "Парламент и президент", 
                     "Парламент", "Парламент", "Парламент", "Президент", "Президент", "Парламент", "Парламент",
                     "Парламент", "Президент", "Президент", "Парламент", "Парламент", "Президент", "Президент",
                     "Парламент", "Парламент", "Парламент", "Президент", "Президент", "Президент", "Президент",
-                    "Президент", "Президент", "Парламент", "Парламент", "Парламент"),
+                    "Президент", "Президент", "Парламент", "Парламент", "Парламент", "Президент", "Президент"),
   election = c("Април 2021", "Юли 2021", "Ноември 2021", "Ноември 2021", "Октомври 2022", "Април 2023", 
                "Март 2017", "Ноември 2016", "Ноември 2016", "Октомври 2014", "Май 2013", "Юли 2009",
                "Октомври 2006", "Октомври 2006", "Юни 2005", "Юни 2001", "Ноември 2001", "Ноември 2001",
                "Април 1997", "Декември 1994", "Октомври 1991", "Октомври 1996", "Октомври 1996",
                "Януари 1992", "Януари 1992", "Октомври 2011", "Октомври 2011", "Юни 2024", "Октомври 2024",
-               "Април 2026"),
+               "Април 2026", "Октомври 2026", "Ноември 2026"),
   round = c("Първи тур", "Първи тур", "Първи тур", "Втори тур", "Първи тур", "Първи тур", "Първи тур", 
             "Първи тур", "Втори тур", "Първи тур", "Първи тур", "Първи тур", "Първи тур", "Втори тур",
             "Първи тур", "Първи тур", "Първи тур", "Втори тур", "Първи тур", "Първи тур", "Първи тур",
             "Първи тур", "Втори тур", "Първи тур", "Втори тур", "Първи тур", "Втори тур", "Първи тур",
-            "Първи тур", "Първи тур")) %>% 
+            "Първи тур", "Първи тур", "Първи тур", "Втори тур")) %>% 
   mutate(election = factor(election, 
                            levels = c("Октомври 1991", 
                                       "Януари 1992",
@@ -372,9 +434,11 @@ act <- tibble(
                                       "Април 2023", 
                                       "Юни 2024",
                                       "Октомври 2024",
-                                      "Април 2026")))
+                                      "Април 2026",
+                                      "Октомври 2026",
+                                      "Ноември 2026")))
 
-write_rds(act, "shiny/elections/activity.rds")
+write_parquet(act, "shiny/elections/activity.parquet")
 
 act %>% 
   mutate(election = fct_reorder(election, activity)) %>% 
@@ -749,3 +813,21 @@ df <- read_delim("votes_02.04.2023.txt", delim = ";", col_names = c("no", "code"
                                                                     "party29", "total29", "paper29", "machine29",
                                                                     "party30", "total30", "paper30", "machine30",
                                                                     "party31", "total31", "paper31", "machine31"))
+
+president2 <- read_parquet("data/elections/president_2.parquet") %>% 
+  mutate(obshtina = case_when(
+    oblast == "Варна" & obshtina == "Бяла" ~ "Бяла (Варненско)",
+    oblast == "Русе" & obshtina == "Бяла" ~ "Бяла (Русенско)",
+    .default = obshtina)) %>%
+  mutate(obshtina = str_replace(obshtina, "София", "Столична"),
+         obshtina = str_replace(obshtina, "Добрич-град", "Добрич")) %>% 
+  mutate(vote_date = "Ноември_2026")
+
+president1 <- read_parquet("data/elections/president_1.parquet") %>% 
+  mutate(obshtina = case_when(
+    oblast == "Варна" & obshtina == "Бяла" ~ "Бяла (Варненско)",
+    oblast == "Русе" & obshtina == "Бяла" ~ "Бяла (Русенско)",
+    .default = obshtina)) %>%
+  mutate(obshtina = str_replace(obshtina, "София", "Столична"),
+         obshtina = str_replace(obshtina, "Добрич-град", "Добрич")) %>% 
+  mutate(vote_date = "Октомври_2026")

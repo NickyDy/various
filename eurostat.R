@@ -25,7 +25,10 @@ sts_inpr_m <- get_eurostat("sts_inpr_m", type = "code", time_format = "date", st
                            filters = list(nace_r2 = "C", s_adj = "SCA", unit = "PCH_PRE")) %>% 
   filter(time >= "2000-01-01")
 
-prc_fpmt_m <- get_eurostat("prc_fpmt_m", type = "label", time_format = "date", stringsAsFactors = T)
+gov_10q_ggnfa <- get_eurostat("gov_10q_ggnfa", type = "label", time_format = "date", stringsAsFactors = T) %>% 
+  filter(s_adj == "Seasonally and calendar adjusted data",
+         sector == "General government",
+         na_item == "Net lending (+)/net borrowing (-)")
 
 prc_fpmt_m %>% 
   filter(indx == "Harmonised index of consumer prices", unit == "Monthly rate of change",
@@ -36,7 +39,7 @@ prc_fpmt_m %>%
   geom_line(linetype = 2, linewidth = 0.3) +
   facet_wrap(vars(geo))
 
-write_parquet(tipsun30, "shiny/eurostat/tipsun30.parquet")
+write_parquet(gov_10q_ggnfa, "shiny/eurostat/gov_10q_ggnfa.parquet")
 
 prc_hicp_mmor %>% map_dfr(~ sum(is.na(.)))
 
@@ -190,7 +193,7 @@ nrg_cb_pem <- get_eurostat("nrg_cb_pem", type = "label", time_format = "date", s
 
 nrg_cb_pem %>%
   filter(!str_detect(geo, "^Euro"),
-         TIME_PERIOD == "2026-06-01", unit == "Percentage",
+         TIME_PERIOD == "2026-08-01", unit == "Percentage",
          siec %in% c("Coal and manufactured gases", "Natural gas", "Nuclear fuels and other fuels n.e.c.",
                      "Oil and petroleum products (excluding biofuel portion)", "Hydro", "Geothermal",
                      "Wind", "Solar"),
@@ -216,7 +219,7 @@ nrg_cb_pem %>%
   scale_x_continuous(expand = expansion(mult = c(0.01, 0.4))) +
   theme(text = element_text(size = 16), axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) +
-  labs(x = NULL, y = NULL, title = "Енергиен микс към юни, 2026 г.",
+  labs(x = NULL, y = NULL, title = "Енергиен микс към август, 2026 г.",
        caption = "Източник на данните: Евростат") +
   facet_wrap(vars(geo))
 
